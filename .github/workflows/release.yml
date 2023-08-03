@@ -10,12 +10,8 @@ jobs:
   build:
 
     runs-on: windows-latest
-
     steps:
       - uses: actions/checkout@v2
-        with:
-          token: ${{ secrets.API_GITHUB_TOKEN }}
-
       - name: Build
         run: |
           mkdir build
