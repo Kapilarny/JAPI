@@ -19,7 +19,7 @@ const char* GetModGUID(void* retAddr) {
 }
 
 void JAPI_PatchASBRMem(void* address, void* data, size_t size) {
-    PatchEx((BYTE*)address, (BYTE*)data, size, GetCurrentProcess());
+    PatchEx((BYTE*) (JAPI::GetASBRModuleBase() + address), (BYTE*)data, size, GetCurrentProcess());
 }
 
 void JAPI_PatchMem(void* address, void* data, size_t size, HANDLE processHandle) {
