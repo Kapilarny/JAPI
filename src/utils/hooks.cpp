@@ -2,14 +2,18 @@
 
 #include <MinHook.h>
 
+#include "utils/logger.h"
+
 bool HookFunction(Hook* hook) {
-    MH_STATUS status = MH_CreateHook(hook->target, hook->detour, &hook->original);
+    MH_STATUS status = MH_CreateHook(hook->target, hook->detour, (LPVOID*) hook->original);
     if (status != MH_OK) {
+        JERROR("Failed to create hook for function" + hook->name);
         return false;
     }
 
     status = MH_EnableHook(hook->target);
     if (status != MH_OK) {
+        JERROR("Failed to enable hook for function" + hook->name);
         return false;
     }
 

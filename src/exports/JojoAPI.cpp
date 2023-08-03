@@ -19,11 +19,11 @@ const char* GetModGUID(void* retAddr) {
 }
 
 void JAPI_PatchASBRMem(void* address, void* data, size_t size) {
-    PatchEx((BYTE*) (JAPI::GetASBRModuleBase() + address), (BYTE*)data, size, GetCurrentProcess());
+    PatchEx((BYTE*) (JAPI::GetASBRModuleBase() + address), (BYTE*)data, size);
 }
 
-void JAPI_PatchMem(void* address, void* data, size_t size, HANDLE processHandle) {
-    PatchEx((BYTE*)address, (BYTE*)data, size, processHandle);
+void JAPI_PatchMem(void* address, void* data, size_t size) {
+    PatchEx((BYTE*)address, (BYTE*)data, size);
 }
 
 bool JAPI_HookFunction(Hook* hook) {

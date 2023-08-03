@@ -11,6 +11,8 @@ void JAPI::Init(HINSTANCE hinstDLL) {
     instance->hinstDLL = hinstDLL;
 
     instance->asbrModuleBase = (uint64_t) GetModuleHandle(NULL);
+
+    JINFO("ASBR Module Base: 0x" + std::to_string(instance->asbrModuleBase));
     JINFO("Initialized JojoAPI!");
     
     instance->LoadMods();
