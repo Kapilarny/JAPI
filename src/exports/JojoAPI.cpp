@@ -26,6 +26,14 @@ void JAPI_PatchMem(void* address, void* data, size_t size) {
     PatchEx((BYTE*)address, (BYTE*)data, size);
 }
 
+JEXP void JAPI_CopyASBRMem(void* dest, void* src, size_t size) {
+    memcpy((BYTE*) (JAPI::GetASBRModuleBase() + dest), (BYTE*) (JAPI::GetASBRModuleBase() + src), size);
+}
+
+JEXP void JAPI_CopyMem(void* dest, void* src, size_t size) {
+    memcpy((BYTE*)dest, (BYTE*)src, size);
+}
+
 bool JAPI_HookFunction(Hook* hook) {
     return HookFunction(hook);
 }
