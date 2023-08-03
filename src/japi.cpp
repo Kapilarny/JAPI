@@ -3,6 +3,7 @@
 #include <Windows.h>
 #include <filesystem>
 
+#include "utils/logger.h"
 #include "exports/JojoAPI.h"
 
 void JAPI::Init(HINSTANCE hinstDLL) {
@@ -10,8 +11,8 @@ void JAPI::Init(HINSTANCE hinstDLL) {
     instance->hinstDLL = hinstDLL;
 
     instance->asbrModuleBase = (uint64_t) GetModuleHandle(NULL);
-
-    printf("[JojoApi]: Initialized!\n");
+    JINFO("Initialized JojoAPI!");
+    
     instance->LoadMods();
 }
 
@@ -34,21 +35,21 @@ void JAPI::LoadMods() {
             // Load the DLL
             auto handle = LoadLibrary(p.path().string().c_str());
             if(!handle) {
-                printf("[ModLoader]: Failed to load mod %s\n", p.path().string().c_str());
+                LOG_ERROR("ModLoader", "Failed to load mod " + p.path().string());
                 continue;
             }
 
             // Get the mod info
             auto getModInfo = (ModMeta (*)()) GetProcAddress(handle, "GetModInfo");
             if(!getModInfo) {
-                printf("[ModLoader]: Failed to get mod info for %s\n", p.path().string().c_str());
+                LOG_ERROR("ModLoader", "Failed to get mod info for " + p.path().string());
                 continue;
             }
 
             ModMeta modInfo = getModInfo();
             auto modInit = (void (*)()) GetProcAddress(handle, "ModInit");
             if(!modInit) {
-                printf("[ModLoader]: Failed to get mod init for %s\n", p.path().string().c_str());
+                LOG_ERROR("ModLoader", "Failed to get mod init for " + p.path().string());
                 continue;
             }
 
@@ -58,7 +59,7 @@ void JAPI::LoadMods() {
         }
     }
 
-    printf("[ModLoader]: Loaded %d mods\n", mods.size());
+    LOG_INFO("ModLoader", "Loaded " + std::to_string(mods.size()) + " mods!");
 }
 
 std::string JAPI::GetModGUID(HANDLE modHandle) {

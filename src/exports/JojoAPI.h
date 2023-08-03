@@ -3,12 +3,12 @@
 #include <Windows.h>
 #include <string>
 
-#define JEXP __declspec(dllexport)
+#define JEXP extern "C" __declspec(dllexport)
 
 typedef struct ModMeta {
-    std::string name;
-    std::string guid;
-    std::string version;
+    const char* name;
+    const char* guid;
+    const char* version;
 } ModMeta;
 
 typedef struct Hook {

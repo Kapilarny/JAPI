@@ -19,6 +19,13 @@ typedef enum LogLevel {
 
 void LogOutput(LogLevel level, const std::string& message, const std::string& pluginGUID);
 
+#define JFATAL(message) LogOutput(LOG_LEVEL_FATAL, message, "JojoAPI");
+#define JERROR(message) LogOutput(LOG_LEVEL_ERROR, message, "JojoAPI");
+#define JWARN(message) LogOutput(LOG_LEVEL_WARN, message, "JojoAPI");
+#define JINFO(message) LogOutput(LOG_LEVEL_INFO, message, "JojoAPI");
+#define JDEBUG(message) LogOutput(LOG_LEVEL_DEBUG, message, "JojoAPI");
+#define JTRACE(message) LogOutput(LOG_LEVEL_TRACE, message, "JojoAPI");
+
 #define LOG_FATAL(pluginGUID, message) LogOutput(LOG_LEVEL_FATAL, message, pluginGUID);
 
 #define LOG_ERROR(pluginGUID, message) LogOutput(LOG_LEVEL_ERROR, message, pluginGUID);
