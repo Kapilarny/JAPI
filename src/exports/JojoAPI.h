@@ -25,6 +25,8 @@ JEXP void JAPI_PatchMem(void* address, void* data, size_t size, HANDLE processHa
 // Hooking
 JEXP bool JAPI_HookFunction(Hook* hook);
 JEXP bool JAPI_UnhookFunction(Hook* hook);
+JEXP bool JAPI_HookASBRFunction(Hook* hook);
+JEXP bool JAPI_UnhookASBRFunction(Hook* hook);
 
 // Logging
 JEXP void JAPI_LogFatal(std::string message);

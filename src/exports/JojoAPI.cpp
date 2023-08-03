@@ -34,6 +34,16 @@ bool JAPI_UnhookFunction(Hook* hook) {
     return UnhookFunction(hook);
 }
 
+bool JAPI_HookASBRFunction(Hook* hook) {
+    hook->target = (void*) (JAPI::GetASBRModuleBase() + hook->target);
+    return HookFunction(hook);
+}
+
+bool JAPI_UnhookASBRFunction(Hook* hook) {
+    hook->target = (void*) (JAPI::GetASBRModuleBase() + hook->target);
+    return UnhookFunction(hook);
+}
+
 void JAPI_LogFatal(std::string message) {
     LOG_FATAL(GetModGUID(__builtin_extract_return_addr(__builtin_return_address(0))), message);
 }
