@@ -8,6 +8,7 @@ bool HookFunction(Hook* hook) {
     MH_STATUS status = MH_CreateHook(hook->target, hook->detour, (LPVOID*) hook->original);
     if (status != MH_OK) {
         JERROR("Failed to create hook for function" + hook->name);
+        JERROR("Error: " + std::to_string(status));
         return false;
     }
 

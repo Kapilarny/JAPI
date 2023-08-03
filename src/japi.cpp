@@ -2,6 +2,7 @@
 
 #include <Windows.h>
 #include <filesystem>
+#include <MinHook.h>
 
 #include "utils/logger.h"
 #include "exports/JojoAPI.h"
@@ -12,7 +13,11 @@ void JAPI::Init(HINSTANCE hinstDLL) {
 
     instance->asbrModuleBase = (uint64_t) GetModuleHandle(NULL);
 
-    JINFO("ASBR Module Base: 0x" + std::to_string(instance->asbrModuleBase));
+    if(MH_Initialize() != MH_OK) {
+        JERROR("Failed to initialize MinHook!");
+        return;
+    }
+    
     JINFO("Initialized JojoAPI!");
     
     instance->LoadMods();
