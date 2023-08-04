@@ -9,6 +9,7 @@ typedef struct ModMeta {
     const char* name;
     const char* guid;
     const char* version;
+    const char* author;
 } ModMeta;
 
 typedef struct Hook {

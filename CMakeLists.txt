@@ -1,4 +1,4 @@
-cmake_minimum_required(VERSION 3.16)
+cmake_minimum_required(VERSION 3.18)
 project(JAPI C CXX)
 
 set(CMAKE_CXX_STANDARD 17)
@@ -17,5 +17,5 @@ add_link_options(-static -static-libgcc -static-libstdc++)
 
 add_library(d3dcompiler_47 SHARED ${SOURCES} "dll.def")
 
-target_include_directories(d3dcompiler_47 PRIVATE "src" "external/minhook/include")
-target_link_libraries(d3dcompiler_47 PRIVATE minhook)
+target_include_directories(d3dcompiler_47 PRIVATE "src" "external/minhook/include" "external/lua/include" "external/sol2/")
+target_link_libraries(d3dcompiler_47 PRIVATE minhook "${CMAKE_CURRENT_SOURCE_DIR}/external/lua/bin/lua54.dll")

@@ -6,6 +6,7 @@
 
 #include "utils/logger.h"
 #include "exports/JojoAPI.h"
+#include "lua/script.h"
 
 void JAPI::Init(HINSTANCE hinstDLL) {
     instance = std::unique_ptr<JAPI>(new JAPI());
@@ -17,10 +18,18 @@ void JAPI::Init(HINSTANCE hinstDLL) {
         JERROR("Failed to initialize MinHook!");
         return;
     }
-    
+
+    ScriptManager::Init();
+
     JINFO("Initialized JojoAPI!");
     
     instance->LoadMods();
+
+    // For now janky loop
+    while(true) {
+        ScriptManager::ExecuteScripts();
+        Sleep(1000);
+    }
 }
 
 uint64_t JAPI::GetASBRModuleBase() {
@@ -34,6 +43,10 @@ void JAPI::LoadMods() {
 
     if(!std::filesystem::exists("japi\\mods")) {
         std::filesystem::create_directory("japi\\mods");
+    }
+
+    if(!std::filesystem::exists("japi\\luamods")) {
+        std::filesystem::create_directory("japi\\luamods");
     }
 
     // Get all files in japi\mods and load them
@@ -63,6 +76,14 @@ void JAPI::LoadMods() {
             modInit();
 
             mods.push_back({modInfo, handle});
+        }
+    }
+
+    // Get all files in japi\luamods and load them
+    for(auto& p : std::filesystem::directory_iterator("japi\\luamods")) {
+        if(p.path().extension() == ".lua") {
+            LOG_INFO("ModLoader", "Loading Lua mod " + p.path().string());
+            ScriptManager::AddFileToWatch(p.path().string());
         }
     }
 
