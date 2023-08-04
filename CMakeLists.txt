@@ -13,6 +13,8 @@ add_subdirectory(external/minhook)
 
 file(GLOB_RECURSE SOURCES "src/*.c" "src/*.cpp" "src/*.h" "src/*.hpp")
 
+add_link_options(-static -static-libgcc -static-libstdc++)
+
 add_library(d3dcompiler_47 SHARED ${SOURCES} "dll.def")
 
 target_include_directories(d3dcompiler_47 PRIVATE "src" "external/minhook/include")
