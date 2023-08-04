@@ -35,6 +35,40 @@ void ScriptManager::ExecuteScripts() {
 
                 // Execute the script
                 lua.script_file(*scriptFilePath);
+
+                // Verify that the script has the config table
+                if (!lua["config"].valid()) {
+                    JERROR("Script does not have a config table: " + *scriptFilePath);
+                    return 0;
+                }
+
+                if (!lua["config"]["name"].is<std::string>()) {
+                    JERROR("Invalid script metadata: " + *scriptFilePath);
+                    return 0;
+                }
+
+                if (!lua["config"]["guid"].is<std::string>()) {
+                    JERROR("Invalid script metadata: " + *scriptFilePath);
+                    return 0;
+                }
+
+                if (!lua["config"]["version"].is<std::string>()) {
+                    JERROR("Invalid script metadata: " + *scriptFilePath);
+                    return 0;
+                }
+
+                if (!lua["config"]["author"].is<std::string>()) {
+                    JERROR("Invalid script metadata: " + *scriptFilePath);
+                    return 0;
+                }
+
+                // Verify that the script has an onLoad function
+                if (!lua["onLoad"].valid()) {
+                    JERROR("Invalid script metadata: " + *scriptFilePath);
+                    return 0;
+                }
+
+
                 lua["onLoad"]();
 
                 return 0;
