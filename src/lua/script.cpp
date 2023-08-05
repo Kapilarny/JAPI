@@ -1,6 +1,7 @@
 #include "script.h"
 
 #include "utils/logger.h"
+#include "utils/config.h"
 #include "exports/JojoAPI.h"
 #include <MinHook.h>
 
@@ -68,7 +69,6 @@ void ScriptManager::ExecuteScripts() {
                     return 0;
                 }
 
-
                 lua["onLoad"]();
 
                 return 0;
@@ -122,6 +122,42 @@ void ScriptManager::LoadCommands(sol::state& lua) {
         JAPI_CopyASBRMem((void*)dataStr.data(), (void*)src, size);
 
         return dataStr;
+    };
+
+    lua["config_bind_string"] = [&](std::string key, std::string defaultVal) {
+        auto config = GetModConfig(lua["config"]["name"]);
+        auto value = ConfigBind(config.table, key, defaultVal);
+
+        SaveConfig(config);
+
+        return value;
+    };
+
+    lua["config_bind_bool"] = [&](std::string key, bool defaultVal) {
+        auto config = GetModConfig(lua["config"]["name"]);
+        auto value = ConfigBind(config.table, key, defaultVal);
+
+        SaveConfig(config);
+
+        return value;
+    };
+
+    lua["config_bind_int"] = [&](std::string key, int defaultVal) {
+        auto config = GetModConfig(lua["config"]["name"]);
+        auto value = ConfigBind(config.table, key, defaultVal);
+
+        SaveConfig(config);
+
+        return value;
+    };
+
+    lua["config_bind_float"] = [&](std::string key, float defaultVal) {
+        auto config = GetModConfig(lua["config"]["name"]);
+        auto value = ConfigBind(config.table, key, defaultVal);
+
+        SaveConfig(config);
+
+        return value;
     };
 }
 

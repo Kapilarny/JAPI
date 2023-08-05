@@ -56,3 +56,19 @@ Returns copied memory at the given address with the given size.
 ### `copy_asbr_mem(offset, size)`
 
 Returns copied memory at the ASBR.exe moduleBase address + offset with the given size
+
+### `config_bind_string(key, defaultValue)`
+
+Returns the string value of the given key in the config file or the default value if the key is not set.
+
+### `config_bind_int(key, defaultValue)`
+
+Returns the integer value of the given key in the config file or the default value if the key is not set.
+
+### `config_bind_float(key, defaultValue)`
+
+Returns the float value of the given key in the config file or the default value if the key is not set.
+
+### `config_bind_bool(key, defaultValue)`
+
+Returns the boolean value of the given key in the config file or the default value if the key is not set.

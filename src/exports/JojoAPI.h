@@ -38,3 +38,9 @@ JEXP void JAPI_LogWarn(std::string message);
 JEXP void JAPI_LogInfo(std::string message);
 JEXP void JAPI_LogDebug(std::string message);
 JEXP void JAPI_LogTrace(std::string message);
+
+// Config
+JEXP std::string JAPI_ConfigBindString(std::string key, std::string defaultValue);
+JEXP int JAPI_ConfigBindInt(std::string key, int defaultValue);
+JEXP float JAPI_ConfigBindFloat(std::string key, float defaultValue);
+JEXP bool JAPI_ConfigBindBool(std::string key, bool defaultValue);

@@ -4,6 +4,7 @@
 #include <vector>
 
 #include "mod.h"
+#include "utils/config.h"
 
 class JAPI {
 public:
@@ -23,6 +24,7 @@ private:
     HWND hwnd;
     DWORD pid;
     HANDLE processHandle;
+    ModConfig japiConfig;
     std::vector<ModData> mods;
 
     static inline std::unique_ptr<JAPI> instance;    

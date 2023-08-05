@@ -11,8 +11,19 @@
 void JAPI::Init(HINSTANCE hinstDLL) {
     instance = std::unique_ptr<JAPI>(new JAPI());
     instance->hinstDLL = hinstDLL;
-
     instance->asbrModuleBase = (uint64_t) GetModuleHandle(NULL);
+
+    // Load config
+    instance->japiConfig = GetModConfig("JAPI");
+    bool shouldSpawnConsole = ConfigBind<bool>(instance->japiConfig.table, "spawn_console", true);
+    SaveConfig(instance->japiConfig);
+    if(shouldSpawnConsole) {
+        AllocConsole();
+        SetConsoleTitle("JojoAPI Console");
+        FILE* file = nullptr;
+        freopen_s(&file, "CONOUT$", "w", stdout);
+        freopen_s(&file, "CONIN$", "r", stdin);
+    }
 
     if(MH_Initialize() != MH_OK) {
         JERROR("Failed to initialize MinHook!");
@@ -22,7 +33,6 @@ void JAPI::Init(HINSTANCE hinstDLL) {
     ScriptManager::Init();
 
     JINFO("Initialized JojoAPI!");
-    
     instance->LoadMods();
 
     // For now janky loop
