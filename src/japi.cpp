@@ -5,6 +5,7 @@
 #include <MinHook.h>
 
 #include "utils/logger.h"
+#include "utils/cpk.h"
 #include "exports/JojoAPI.h"
 #include "lua/script.h"
 
@@ -58,6 +59,13 @@ void JAPI::LoadMods() {
     if(!std::filesystem::exists("japi\\luamods")) {
         std::filesystem::create_directory("japi\\luamods");
     }
+
+    if(!std::filesystem::exists("japi\\cpks")) {
+        std::filesystem::create_directory("japi\\cpks");
+    }
+
+    // Load CPK mods
+    LoadCPKMods();
 
     // Get all files in japi\mods and load them
     for(auto& p : std::filesystem::directory_iterator("japi\\mods")) {
