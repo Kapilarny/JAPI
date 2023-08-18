@@ -1,0 +1,6 @@
+[submodule "external/asmjit"]
+	path = external/asmjit
+	url = https://github.com/asmjit/asmjit
+[submodule "external/asmtk"]
+	path = external/asmtk
+	url = https://github.com/asmjit/asmtk
