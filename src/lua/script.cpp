@@ -1,9 +1,11 @@
 #include "script.h"
 
+#include <MinHook.h>
+
+#include "asm.h"
 #include "utils/logger.h"
 #include "utils/config.h"
 #include "exports/JojoAPI.h"
-#include <MinHook.h>
 
 void ScriptManager::Init() {
     instance = std::make_unique<ScriptManager>();
@@ -158,6 +160,10 @@ void ScriptManager::LoadCommands(sol::state& lua) {
         SaveConfig(config);
 
         return value;
+    };
+
+    lua["exec_asm"] = [&](std::string code) {
+        ExecuteASMCode(code);
     };
 }
 

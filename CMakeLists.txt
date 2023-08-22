@@ -10,6 +10,7 @@ set(CMAKE_SHARED_LIBRARY_PREFIX "")
 set(CMAKE_STATIC_LIBRARY_PREFIX "")
 
 add_subdirectory(external/minhook)
+add_subdirectory(external/asmtk)
 
 file(GLOB_RECURSE SOURCES "src/*.c" "src/*.cpp" "src/*.h" "src/*.hpp")
 
@@ -17,5 +18,12 @@ add_link_options(-static -static-libgcc -static-libstdc++ -Wno-pointer-arith)
 
 add_library(d3dcompiler_47 SHARED ${SOURCES} "dll.def")
 
-target_include_directories(d3dcompiler_47 PRIVATE "src" "external/minhook/include" "external/lua/include" "external/toml" "external/sol2/")
-target_link_libraries(d3dcompiler_47 PRIVATE minhook "${CMAKE_CURRENT_SOURCE_DIR}/external/lua/bin/lua54.dll")
+target_include_directories(d3dcompiler_47 PRIVATE "src" "external/minhook/include" "external/lua/include" "external/toml" "external/sol2/" "external/asmjit/src" "external/asmtk/src")
+target_link_libraries(d3dcompiler_47 PRIVATE
+    -static
+    winpthread
+    minhook 
+    "${CMAKE_CURRENT_SOURCE_DIR}/external/lua/bin/lua54.dll"
+    "${CMAKE_CURRENT_SOURCE_DIR}/external/built/asmjit.dll"
+    "${CMAKE_CURRENT_SOURCE_DIR}/external/built/asmtk.dll"
+)

@@ -6,6 +6,7 @@
 #include "utils/logger.h"
 #include "utils/mem.h"
 #include "utils/hooks.h"
+#include "lua/asm.h"
 
 const char* GetModGUID(void* retAddr) {
     HMODULE hModule = NULL;
@@ -34,6 +35,10 @@ void JAPI_CopyASBRMem(void* dest, void* src, size_t size) {
 
 void JAPI_CopyMem(void* dest, void* src, size_t size) {
     memcpy((BYTE*)dest, (BYTE*)src, size);
+}
+
+void JAPI_ExecuteASMCode(std::string code) {
+    ExecuteASMCode(code);
 }
 
 bool JAPI_HookFunction(Hook* hook) {

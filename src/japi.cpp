@@ -8,6 +8,7 @@
 #include "utils/cpk.h"
 #include "exports/JojoAPI.h"
 #include "lua/script.h"
+#include "lua/asm.h"
 
 void JAPI::Init(HINSTANCE hinstDLL) {
     instance = std::unique_ptr<JAPI>(new JAPI());
@@ -99,6 +100,13 @@ void JAPI::LoadMods() {
 
     // Get all files in japi\luamods and load them
     for(auto& p : std::filesystem::directory_iterator("japi\\luamods")) {
+        // Get mod filename
+        std::string name = p.path().filename().string();
+
+        if(name[0] == '-') {
+            continue;
+        }
+
         if(p.path().extension() == ".lua") {
             LOG_INFO("ModLoader", "Loading Lua mod " + p.path().string());
             ScriptManager::AddFileToWatch(p.path().string());
