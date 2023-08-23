@@ -36,7 +36,7 @@ __int64 __fastcall sub_645828_Hook(unsigned __int64 a1, unsigned __int64 a2)
         auto filename = cpk.substr(cpk.find_last_of("/\\") + 1);
 
         // Get the priority
-        auto priority = ConfigBind(config.table, filename, 999);
+        auto priority = ConfigBind(config.table, filename, 1000);
         SaveConfig(config);
 
         LOG_TRACE("CPKModLoader", "Loading CPK: " + cpk + " with priority " + std::to_string(priority));

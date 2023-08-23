@@ -8,6 +8,8 @@
 #include "exports/JojoAPI.h"
 
 void ScriptManager::Init() {
+    InitASMExecutor();
+
     instance = std::make_unique<ScriptManager>();
 }
 
@@ -23,58 +25,63 @@ void ScriptManager::ExecuteScripts() {
 
             // If the thread is still running, terminate it
             if (scriptData.threadHandle != nullptr) {
+                if(scriptData.luaHandle["onUnload"].valid()) {
+                    scriptData.luaHandle["onUnload"]();
+                }
+
                 TerminateThread(scriptData.threadHandle, 0);
+                scriptData.luaHandle = sol::state();
             }
 
             // Create a new thread
             scriptData.threadHandle = CreateThread(nullptr, 0, [](LPVOID lpParam) -> DWORD {
-                auto scriptFilePath = (std::string*)lpParam;
+                ScriptData* scriptData = (ScriptData*)lpParam;
+                std::string scriptFilePath = scriptData->scriptFilePath;
 
                 // Create a new Lua state
-                sol::state lua;
-                lua.open_libraries(sol::lib::base);
+                scriptData->luaHandle.open_libraries(sol::lib::base, sol::lib::string, sol::lib::math, sol::lib::table, sol::lib::debug, sol::lib::package, sol::lib::os, sol::lib::io, sol::lib::coroutine, sol::lib::bit32, sol::lib::utf8, sol::lib::ffi, sol::lib::jit);
 
-                instance->LoadCommands(lua);
+                instance->LoadCommands(scriptData->luaHandle);
 
                 // Execute the script
-                lua.script_file(*scriptFilePath);
+                scriptData->luaHandle.script_file(scriptFilePath);
 
                 // Verify that the script has the config table
-                if (!lua["config"].valid()) {
-                    JERROR("Script does not have a config table: " + *scriptFilePath);
+                if (!scriptData->luaHandle["config"].valid()) {
+                    JERROR("Script does not have a config table: " + scriptFilePath);
                     return 0;
                 }
 
-                if (!lua["config"]["name"].is<std::string>()) {
-                    JERROR("Invalid script metadata: " + *scriptFilePath);
+                if (!scriptData->luaHandle["config"]["name"].is<std::string>()) {
+                    JERROR("Invalid script metadata: " + scriptFilePath);
                     return 0;
                 }
 
-                if (!lua["config"]["guid"].is<std::string>()) {
-                    JERROR("Invalid script metadata: " + *scriptFilePath);
+                if (!scriptData->luaHandle["config"]["guid"].is<std::string>()) {
+                    JERROR("Invalid script metadata: " + scriptFilePath);
                     return 0;
                 }
 
-                if (!lua["config"]["version"].is<std::string>()) {
-                    JERROR("Invalid script metadata: " + *scriptFilePath);
+                if (!scriptData->luaHandle["config"]["version"].is<std::string>()) {
+                    JERROR("Invalid script metadata: " + scriptFilePath);
                     return 0;
                 }
 
-                if (!lua["config"]["author"].is<std::string>()) {
-                    JERROR("Invalid script metadata: " + *scriptFilePath);
+                if (!scriptData->luaHandle["config"]["author"].is<std::string>()) {
+                    JERROR("Invalid script metadata: " + scriptFilePath);
                     return 0;
                 }
 
                 // Verify that the script has an onLoad function
-                if (!lua["onLoad"].valid()) {
-                    JERROR("Invalid script metadata: " + *scriptFilePath);
+                if (!scriptData->luaHandle["onLoad"].valid()) {
+                    JERROR("Invalid script metadata: " + scriptFilePath);
                     return 0;
                 }
 
-                lua["onLoad"]();
+                scriptData->luaHandle["onLoad"]();
 
                 return 0;
-            }, (LPVOID) &scriptFilePath, 0, nullptr);
+            }, (LPVOID) &scriptData, 0, nullptr);
         }
     }
 }
@@ -162,6 +169,22 @@ void ScriptManager::LoadCommands(sol::state& lua) {
         return value;
     };
 
+    lua["get_proc_address"] = [&](std::string module, std::string proc) {
+        return (uintptr_t)GetProcAddress(GetModuleHandleA(module.c_str()), proc.c_str());
+    };
+
+    lua["mem_alloc"] = [&](size_t size) {
+        return (uintptr_t)malloc(size);
+    };
+
+    lua["mem_free"] = [&](uintptr_t address) {
+        free((void*)address);
+    };
+
+    lua["mem_write"] = [&](uintptr_t address, std::string data, size_t size) {
+        memcpy((void*)address, (void*)data.data(), size);
+    };
+
     lua["exec_asm"] = [&](std::string code) {
         ExecuteASMCode(code);
     };
@@ -173,7 +196,12 @@ void ScriptManager::AddFileToWatch(std::string scriptFilePath) {
         return;
     }
 
-    instance->watchedFiles[scriptFilePath] = {};
+    instance->watchedFiles[scriptFilePath] = {
+        std::filesystem::last_write_time(scriptFilePath),
+        scriptFilePath,
+        nullptr,
+        sol::state()
+    };
 }
 
 void ScriptManager::RemoveFileFromWatch(std::string scriptFilePath) {

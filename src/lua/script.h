@@ -12,7 +12,9 @@
 
 typedef struct ScriptData {
     std::filesystem::file_time_type scriptTime;
+    std::string scriptFilePath;
     HANDLE threadHandle;
+    sol::state luaHandle;
 } ScriptData;
 
 class ScriptManager {
