@@ -41,7 +41,7 @@ void ScriptManager::ExecuteScripts() {
                 // Create a new Lua state
                 scriptData->luaHandle.open_libraries(sol::lib::base, sol::lib::string, sol::lib::math, sol::lib::table, sol::lib::debug, sol::lib::package, sol::lib::os, sol::lib::io, sol::lib::coroutine, sol::lib::bit32, sol::lib::utf8, sol::lib::ffi, sol::lib::jit);
 
-                instance->LoadCommands(scriptData->luaHandle);
+                instance->LoadCommands(scriptData->luaHandle, scriptData);
 
                 // Execute the script
                 scriptData->luaHandle.script_file(scriptFilePath);
@@ -86,7 +86,7 @@ void ScriptManager::ExecuteScripts() {
     }
 }
 
-void ScriptManager::LoadCommands(sol::state& lua) {
+void ScriptManager::LoadCommands(sol::state& lua, ScriptData* scriptData) {
     lua["log_trace"] = [&](std::string message) {
         LOG_TRACE(lua["config"]["name"], message);
     };
@@ -187,6 +187,15 @@ void ScriptManager::LoadCommands(sol::state& lua) {
 
     lua["exec_asm"] = [&](std::string code) {
         ExecuteASMCode(code);
+    };
+
+    lua["hook_func"] = [&](uintptr_t target, sol::protected_function callback) {
+        callback(); // This is fine
+
+        scriptData->bpHooks.push_back(std::make_unique<BreakpointHook>(target, [&](PEXCEPTION_POINTERS info) -> void {
+            JINFO("Called motherfucker"); // This is fine
+            callback(); 
+        }));
     };
 }
 

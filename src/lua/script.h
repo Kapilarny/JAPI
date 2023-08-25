@@ -10,11 +10,14 @@
 #include <memory>
 #include <filesystem>
 
+#include "bp_hook.h"
+
 typedef struct ScriptData {
     std::filesystem::file_time_type scriptTime;
     std::string scriptFilePath;
     HANDLE threadHandle;
     sol::state luaHandle;
+    std::vector<std::unique_ptr<BreakpointHook>> bpHooks;
 } ScriptData;
 
 class ScriptManager {
@@ -28,7 +31,7 @@ public:
 private:
     static inline std::unique_ptr<ScriptManager> instance;
 
-    void LoadCommands(sol::state& lua);
+    void LoadCommands(sol::state& lua, ScriptData* scriptData);
 
     std::unordered_map<std::string, ScriptData> watchedFiles;
 };
