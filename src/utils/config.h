@@ -17,7 +17,7 @@ ModConfig GetModConfig(std::string modName);
 void SaveConfig(ModConfig& config);
 
 template <typename T>
-T ConfigBind(toml::table& table, std::string key, T defaultValue) {
+inline T ConfigBind(toml::table& table, std::string key, T defaultValue) {
     if (table.contains(key)) {
         return table[key].value_or(defaultValue);
     }
@@ -25,4 +25,9 @@ T ConfigBind(toml::table& table, std::string key, T defaultValue) {
     table.insert_or_assign(key, defaultValue);
 
     return defaultValue;
+}
+
+template <typename T>
+void ConfigSet(toml::table& table, std::string key, T value) {
+    table.insert_or_assign(key, value);
 }

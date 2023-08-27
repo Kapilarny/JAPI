@@ -32,8 +32,31 @@ __int64 __fastcall sub_645828_Hook(unsigned __int64 a1, unsigned __int64 a2)
         // Change all backslashes to forward slashes
         std::replace(cpk.begin(), cpk.end(), '\\', '/');
 
-        // Get the filename without the extension
+        // Get the filename
         auto filename = cpk.substr(cpk.find_last_of("/\\") + 1);
+
+        // Remove the last 4 characters (.cpk)
+        auto fileNoExt = filename.substr(0, filename.size() - 4);
+
+        // Check if there exists an .cpkinstall file with the same name
+        auto install = "japi\\cpks\\" + fileNoExt + ".cpkinstall";
+        if(std::filesystem::exists(install)) {
+            // Read the file
+            std::ifstream file(install);
+            std::string line;
+            std::getline(file, line);
+            int filePriority = std::stoi(line);
+
+            LOG_TRACE("CPKModLoader", "Found .cpkinstall file for " + filename + " with priority " + std::to_string(filePriority));
+
+            file.close();
+
+            ConfigSet(config.table, filename, filePriority);
+            SaveConfig(config);
+
+            // Delete the file
+            std::filesystem::remove(install);
+        }
 
         // Get the priority
         auto priority = ConfigBind(config.table, filename, 1000);

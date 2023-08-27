@@ -1,11 +1,15 @@
 #include "JojoAPI.h"
 
+#include <windows.h>
+#include <tlhelp32.h>
+
 #include "japi.h"
 
 #include "utils/config.h"
 #include "utils/logger.h"
 #include "utils/mem.h"
 #include "utils/hooks.h"
+
 #include "lua/asm.h"
 
 const char* GetModGUID(void* retAddr) {
@@ -23,6 +27,10 @@ const char* GetModGUID(void* retAddr) {
 
 JEXP __int64 JAPI_GetASBRModuleBase() {
     return JAPI::GetASBRModuleBase();
+}
+
+JEXP __int64 JAPI_FindSignature(const char* signature, const char* mask) {
+    return FindSignature(JAPI::GetASBRModuleBase(), JAPI::GetASBRModuleSize(), signature, mask);
 }
 
 void JAPI_PatchASBRMem(void* address, void* data, size_t size) {

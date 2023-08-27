@@ -1,6 +1,7 @@
 #include "japi.h"
 
 #include <Windows.h>
+#include <tlhelp32.h>
 #include <filesystem>
 #include <MinHook.h>
 
@@ -32,6 +33,13 @@ void JAPI::Init(HINSTANCE hinstDLL) {
         return;
     }
 
+    // Get dwSize
+    HANDLE hSnapshot = CreateToolhelp32Snapshot(TH32CS_SNAPMODULE, GetCurrentProcessId());
+    MODULEENTRY32 me;
+    me.dwSize = sizeof(MODULEENTRY32);
+    Module32First(hSnapshot, &me);
+    instance->dwSize = me.modBaseSize;
+
     ScriptManager::Init();
 
     JINFO("Initialized JojoAPI!");
@@ -42,6 +50,10 @@ void JAPI::Init(HINSTANCE hinstDLL) {
         ScriptManager::ExecuteScripts();
         Sleep(1000);
     }
+}
+
+size_t JAPI::GetASBRModuleSize() {
+    return instance->dwSize;
 }
 
 uint64_t JAPI::GetASBRModuleBase() {
