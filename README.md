@@ -12,3 +12,15 @@ JojoAPI is a modding API for Jojo's Bizzare Adventure All-Star Battle R. It's in
 ## Documentation
 
 You can find the documentation [here](https://kapilarny.me/JAPI-Docs/)
+
+## Dependencies
+
+Thanks to these, JojoAPI is possible:
+
+- [MinHook](https://github.com/TsudaKageyu/minhook) - A minimalistic x86/x64 API hooking library for Windows
+- [asmjit](https://github.com/asmjit/asmjit) - JIT assembler
+- [asmtk](https://github.com/asmjit/asmtk) - Assembler Toolkit
+- [lua](https://lua.org) - A powerful, fast, lightweight, embeddable scripting language
+- [sol2](https://github.com/ThePhD/sol2) - A C++ library binding to Lua
+- [toml++](https://github.com/marzer/tomlplusplus) - Header-only TOML config file parser and serializer for C++17
+- A lot of coffee
