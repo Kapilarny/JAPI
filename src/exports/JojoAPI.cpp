@@ -21,6 +21,10 @@ const char* GetModGUID(void* retAddr) {
     return getModInfo().guid;
 }
 
+JEXP __int64 JAPI_GetASBRModuleBase() {
+    return JAPI::GetASBRModuleBase();
+}
+
 void JAPI_PatchASBRMem(void* address, void* data, size_t size) {
     PatchEx((BYTE*) (JAPI::GetASBRModuleBase() + (uint64_t) address), (BYTE*)data, size);
 }

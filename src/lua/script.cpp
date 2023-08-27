@@ -27,6 +27,13 @@ void ScriptManager::ExecuteScripts() {
             if (scriptData.threadHandle != nullptr) {
                 if(scriptData.luaHandle["onUnload"].valid()) {
                     scriptData.luaHandle["onUnload"]();
+
+                    // Unload all the hooks
+                    for (auto& hook : scriptData.bpHooks) {
+                        hook->Disable();
+                    }
+
+                    scriptData.bpHooks.clear();
                 }
 
                 TerminateThread(scriptData.threadHandle, 0);
@@ -189,13 +196,22 @@ void ScriptManager::LoadCommands(sol::state& lua, ScriptData* scriptData) {
         ExecuteASMCode(code);
     };
 
-    lua["hook_func"] = [&](uintptr_t target, sol::protected_function callback) {
-        callback(); // This is fine
+    lua["hook_func"] = [&](uintptr_t target, sol::function callback) {
+        // This is fucking stupid, but i do not give a smallest fuck
+        scriptData->bpHooks.push_back(std::make_unique<BreakpointHook>(target, callback, [&](PEXCEPTION_POINTERS info, sol::function cb) -> void {
+            bool result = cb(info->ContextRecord->Rip);
 
-        scriptData->bpHooks.push_back(std::make_unique<BreakpointHook>(target, [&](PEXCEPTION_POINTERS info) -> void {
-            JINFO("Called motherfucker"); // This is fine
-            callback(); 
+            // If false we should skip calling the original function
+            if(!result) {
+                info->ContextRecord->Rip = AllocatedRetInstruction();
+            }
         }));
+
+        return scriptData->bpHooks.size();
+    };
+
+    lua["unhook_func"] = [&](uint16_t hookId) {
+        scriptData->bpHooks[hookId]->Disable();
     };
 }
 

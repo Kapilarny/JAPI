@@ -2,22 +2,23 @@
 #include <cstdint>
 #include <functional>
 #include <vector>
+#include <sol.hpp>
 
 // Thanks to yeeeeeeee. for bp_hook code
 
 class BreakpointHook {
 public:
-	BreakpointHook(std::uintptr_t addr, std::function<void(PEXCEPTION_POINTERS)> handler);
+	BreakpointHook(std::uintptr_t addr, sol::function callback, std::function<void(PEXCEPTION_POINTERS, sol::function)> handler);
 	void Enable();
 	void Disable();
 	~BreakpointHook();
-
-	std::function<void(PEXCEPTION_POINTERS)> m_handler;
 
 private:
 	std::uintptr_t m_addr;
 	std::uint8_t m_originalBytes;
 	DWORD m_originalProtection;
+	sol::function m_callback;
+	std::function<void(PEXCEPTION_POINTERS, sol::function)> m_handler;
 
 	static long __stdcall onException(PEXCEPTION_POINTERS info);
 };

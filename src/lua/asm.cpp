@@ -56,6 +56,44 @@ void InitASMExecutor() {
     LOG_INFO("AsmExecutor", "Initialized ASM executor!");
 }
 
+__int64 AllocatedRetInstruction() {
+    static CodeHolder codeHolder;
+    static JitRuntime jit;
+    static bool initialized = false;
+    typedef void (*Func)();
+    static Func fn;
+
+    if(initialized) {
+        return (__int64)fn;
+    }
+
+    Error err = codeHolder.init(env);
+    if(err) {
+        LOG_ERROR("AsmExecutor", "Failed to initialize code holder: " + std::string(DebugUtils::errorAsString(err)));
+        return 0;
+    }
+
+    if(shouldAttachLogger) codeHolder.setLogger(&logger);
+
+    x86::Assembler assembler(&codeHolder);
+    AsmParser parser(&assembler);
+    err = parser.parse("ret");
+    if(err) {
+        LOG_ERROR("AsmExecutor", "Failed to parse code: " + std::string(DebugUtils::errorAsString(err)));
+        return 0;
+    }
+
+    err = jit.add(&fn, &codeHolder);
+    if(err) {
+        LOG_ERROR("AsmExecutor", "Failed to add code to JIT: " + std::string(DebugUtils::errorAsString(err)));
+        return 0;
+    }
+
+    initialized = true;
+
+    return AllocatedRetInstruction();
+}
+
 void ExecuteASMCode(const std::string& code) {
     CodeHolder codeHolder;
     Error err = codeHolder.init(env);

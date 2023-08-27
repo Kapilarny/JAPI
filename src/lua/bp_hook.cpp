@@ -5,10 +5,11 @@
 static bool s_handlerCreated = false;
 static std::vector<BreakpointHook*> s_hookList;
 
-BreakpointHook::BreakpointHook(std::uintptr_t addr, std::function<void(PEXCEPTION_POINTERS)> handler) {
+BreakpointHook::BreakpointHook(std::uintptr_t addr, sol::function callback, std::function<void(PEXCEPTION_POINTERS, sol::function)> handler) {
 	this->m_addr = addr;
 	this->m_handler = handler;
 	this->m_originalBytes = *(uint8_t*)m_addr;
+	this->m_callback = callback;
 
 	if (!s_handlerCreated) {
 		JINFO("Creating VEH");
@@ -57,7 +58,7 @@ long WINAPI BreakpointHook::onException(PEXCEPTION_POINTERS info) {
 			bp->Enable();
 			info->ContextRecord->EFlags &= ~0x00000100; // Remove TRACE from EFLAGS
 
-			bp->m_handler(info);
+			bp->m_handler(info, bp->m_callback);
 
 			return EXCEPTION_CONTINUE_EXECUTION;
 		}

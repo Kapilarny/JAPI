@@ -20,6 +20,8 @@ typedef struct Hook {
 } Hook;
 
 // Memory patching
+JEXP __int64 JAPI_GetASBRModuleBase();
+
 JEXP void JAPI_PatchASBRMem(void* address, void* data, size_t size);
 JEXP void JAPI_PatchMem(void* address, void* data, size_t size);
 JEXP void JAPI_CopyASBRMem(void* dest, void* src, size_t size);
