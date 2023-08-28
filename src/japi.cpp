@@ -2,6 +2,8 @@
 
 #include <Windows.h>
 #include <tlhelp32.h>
+#include <psapi.h>
+
 #include <filesystem>
 #include <MinHook.h>
 
@@ -32,6 +34,10 @@ void JAPI::Init(HINSTANCE hinstDLL) {
         JERROR("Failed to initialize MinHook!");
         return;
     }
+
+    MODULEINFO info;
+    GetModuleInformation(GetCurrentProcess(), GetModuleHandleA(0), &info, sizeof(MODULEINFO));
+    instance->dwSize = info.SizeOfImage;
 
     ScriptManager::Init();
 

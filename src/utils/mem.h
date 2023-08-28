@@ -20,20 +20,20 @@ inline bool MemoryCompare(const BYTE* data, const BYTE* mask, const char* szMask
 	return (*szMask == 0);
 }
 
-inline void* FindSignature(char* base, size_t size, const char* signature, const char* mask) {
-	size_t patternLenght = strlen(signature);
+inline void* FindSignature(char* begin, size_t size, const char* pattern, const char* mask) {
+	unsigned int patternLength = strlen(pattern);
 
-	for(unsigned int i = 0; i < size - patternLenght; i++) {
+	for (unsigned int i = 0; i < size - patternLength; i++) {
 		bool found = true;
-		for(unsigned int j = 0; j < patternLenght; j++) {
-			if(mask[j] != '?' && signature[j] != *(base + i + j)) {
+		for (unsigned int j = 0; j < patternLength; j++) {
+			if (mask[j] != '?' && pattern[j] !=*(begin + i + j)) {
 				found = false;
 				break;
 			}
 		}
-
-		if(found) return base + i;
+		if (found) {
+			return (begin + i);
+		}
 	}
-
 	return nullptr;
 }

@@ -29,10 +29,9 @@ JEXP __int64 JAPI_GetASBRModuleBase() {
     return JAPI::GetASBRModuleBase();
 }
 
-// NEXT RELEASE
-// JEXP __int64 JAPI_FindSignature(const char* signature, const char* mask) {
-//     return (__int64)FindSignature((char*)JAPI::GetASBRModuleBase(), INT64_MAX, signature, mask);
-// }
+JEXP __int64 JAPI_FindSignature(const char* signature, const char* mask) {
+    return (__int64)FindSignature((char*)JAPI::GetASBRModuleBase(), JAPI::GetASBRModuleSize(), signature, mask);
+}
 
 void JAPI_PatchASBRMem(void* address, void* data, size_t size) {
     PatchEx((BYTE*) (JAPI::GetASBRModuleBase() + (uint64_t) address), (BYTE*)data, size);
