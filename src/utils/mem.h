@@ -20,18 +20,20 @@ inline bool MemoryCompare(const BYTE* data, const BYTE* mask, const char* szMask
 	return (*szMask == 0);
 }
 
-inline DWORD FindSignature(__int64 sigStart, size_t sigSize, const char* signature, const char* mask) {
-	byte* data = new byte[sigSize];
-	size_t bytesRead;
+inline void* FindSignature(char* base, size_t size, const char* signature, const char* mask) {
+	size_t patternLenght = strlen(signature);
 
-	memcpy(data, (void*)sigStart, sigSize);
-	for(DWORD i = 0; i < sigSize; i++) {
-		if(MemoryCompare((const BYTE*)(data + i), (const BYTE*)signature, mask)) {
-			delete[] data;
-			return sigStart + i;
+	for(unsigned int i = 0; i < size - patternLenght; i++) {
+		bool found = true;
+		for(unsigned int j = 0; j < patternLenght; j++) {
+			if(mask[j] != '?' && signature[j] != *(base + i + j)) {
+				found = false;
+				break;
+			}
 		}
+
+		if(found) return base + i;
 	}
 
-	delete[] data;
-	return 0;
+	return nullptr;
 }

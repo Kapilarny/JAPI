@@ -26,7 +26,7 @@ __int64 __fastcall sub_645828_Hook(unsigned __int64 a1, unsigned __int64 a2)
 {
     auto result = sub_645828_Original(a1, a2);
     
-    auto loadCpk = (__int64(__fastcall*)(__int64 a, __int64 b))(JAPI::GetASBRModuleBase() + 0x63E368);
+    auto loadCpk = (__int64(__fastcall*)(__int64 a, __int64 b))(JAPI::GetASBRModuleBase() + 0x64B008);
 
     for(auto& cpk : cpks) {
         // Change all backslashes to forward slashes
@@ -81,14 +81,13 @@ void LoadCPKMods() {
             cpks.push_back(p.path().string());
         }
     }
-
     // Hook the CPK loading function
     Hook hook = {
-        (void*) 0x645828,
+        (void*) 0x6524C8,
         (void*) &sub_645828_Hook,
         (void**) &sub_645828_Original,
         "sub_645828"
     };
 
-    JAPI_HookASBRFunction(&hook);
+    JAPI_HookFunction(&hook);
 }
