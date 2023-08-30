@@ -13,6 +13,14 @@ JojoAPI is a modding API for Jojo's Bizzare Adventure All-Star Battle R. It's in
 
 You can find the documentation [here](https://kapilarny.me/JAPI-Docs/)
 
+## Donations
+
+Huge thanks to these people for supporting this project:
+
+- Hydra
+
+If you also want to support me, you can donate to me via [PayPal](https://paypal.me/kapilarny) or [Ko-fi](https://ko-fi.com/kapilarny)
+
 ## Dependencies
 
 Thanks to these, JojoAPI is possible:
