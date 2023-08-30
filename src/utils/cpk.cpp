@@ -58,6 +58,30 @@ __int64 __fastcall sub_645828_Hook(unsigned __int64 a1, unsigned __int64 a2)
             std::filesystem::remove(install);
         }
 
+        // Check if there exists a .cpk.info file for this cpk
+        auto info = "japi\\cpks\\" + fileNoExt + ".cpk.info";
+        if(std::filesystem::exists(info)) {
+            // Read the file
+            std::ifstream file(info);
+            // Read 4 bytes
+            char buffer[4];
+            file.read(buffer, 4);
+            
+            // Swap to small endian
+            std::reverse(&buffer, buffer + 4);
+            int filePriority = *(int*)buffer;
+
+            LOG_TRACE("CPKModLoader", "Found .cpk.info file for " + filename + " with priority " + std::to_string(filePriority));
+
+            file.close();
+
+            ConfigSet(config.table, filename, filePriority);
+            SaveConfig(config);
+
+            // Delete the file
+            std::filesystem::remove(info);
+        }
+
         // Get the priority
         auto priority = ConfigBind(config.table, filename, 1000);
         SaveConfig(config);

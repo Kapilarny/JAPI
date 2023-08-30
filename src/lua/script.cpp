@@ -7,79 +7,13 @@
 #include "utils/config.h"
 #include "exports/JojoAPI.h"
 
+#include "japi.h"
+
 void ScriptManager::Init() {
     InitASMExecutor();
 
     instance = std::make_unique<ScriptManager>();
 }
-
-typedef struct BpContext {
-    DWORD64 P1Home;
-    DWORD64 P2Home;
-    DWORD64 P3Home;
-    DWORD64 P4Home;
-    DWORD64 P5Home;
-    DWORD64 P6Home;
-    DWORD ContextFlags;
-    DWORD MxCsr;
-    WORD SegCs;
-    WORD SegDs;
-    WORD SegEs;
-    WORD SegFs;
-    WORD SegGs;
-    WORD SegSs;
-    DWORD EFlags;
-    DWORD64 Dr0;
-    DWORD64 Dr1;
-    DWORD64 Dr2;
-    DWORD64 Dr3;
-    DWORD64 Dr6;
-    DWORD64 Dr7;
-    DWORD64 Rax;
-    DWORD64 Rcx;
-    DWORD64 Rdx;
-    DWORD64 Rbx;
-    DWORD64 Rsp;
-    DWORD64 Rbp;
-    DWORD64 Rsi;
-    DWORD64 Rdi;
-    DWORD64 R8;
-    DWORD64 R9;
-    DWORD64 R10;
-    DWORD64 R11;
-    DWORD64 R12;
-    DWORD64 R13;
-    DWORD64 R14;
-    DWORD64 R15;
-    DWORD64 Rip;
-    XMM_SAVE_AREA32 FltSave;
-    XMM_SAVE_AREA32 FloatSave;
-    M128A Header[2];
-    M128A Legacy[8];
-    M128A Xmm0;
-    M128A Xmm1;
-    M128A Xmm2;
-    M128A Xmm3;
-    M128A Xmm4;
-    M128A Xmm5;
-    M128A Xmm6;
-    M128A Xmm7;
-    M128A Xmm8;
-    M128A Xmm9;
-    M128A Xmm10;
-    M128A Xmm11;
-    M128A Xmm12;
-    M128A Xmm13;
-    M128A Xmm14;
-    M128A Xmm15;
-    M128A VectorRegister[26];
-    DWORD64 VectorControl;
-    DWORD64 DebugControl;
-    DWORD64 LastBranchToRip;
-    DWORD64 LastBranchFromRip;
-    DWORD64 LastExceptionToRip;
-    DWORD64 LastExceptionFromRip;
-} BpContext;
 
 void ScriptManager::ExecuteScripts() {
     // Create a new thread for each script
@@ -198,6 +132,10 @@ void ScriptManager::LoadCommands(sol::state& lua, ScriptData* scriptData) {
         JAPI_PatchASBRMem((void*)address, data.data(), data.size());
     };
 
+    lua["get_asbr_base"] = [&]() {
+        return JAPI::GetASBRModuleBase();
+    };
+
     lua["copy_mem"] = [&](uintptr_t src, size_t size) {
         std::string dataStr(size, 0);
         JAPI_CopyMem((void*)dataStr.data(), (void*)src, size);
@@ -271,6 +209,107 @@ void ScriptManager::LoadCommands(sol::state& lua, ScriptData* scriptData) {
     lua["hook_func"] = [&](uintptr_t target, sol::function callback) {
         // This is fucking stupid, but i do not give a smallest fuck
         scriptData->bpHooks.push_back(std::make_unique<BreakpointHook>(target, callback, [&](PEXCEPTION_POINTERS info, sol::function cb) -> void {
+            // Create a new table
+            sol::table data = lua.create_table();
+            
+            // This fucking sucks but i dont care
+            data["Dr0"] = info->ContextRecord->Dr0;
+            data["Dr1"] = info->ContextRecord->Dr1;
+            data["Dr2"] = info->ContextRecord->Dr2;
+            data["Dr3"] = info->ContextRecord->Dr3;
+            data["Dr6"] = info->ContextRecord->Dr6;
+            data["Dr7"] = info->ContextRecord->Dr7;
+            data["Rax"] = info->ContextRecord->Rax;
+            data["Rcx"] = info->ContextRecord->Rcx;
+            data["Rdx"] = info->ContextRecord->Rdx;
+            data["Rbx"] = info->ContextRecord->Rbx;
+            data["Rsp"] = info->ContextRecord->Rsp;
+            data["Rbp"] = info->ContextRecord->Rbp;
+            data["Rsi"] = info->ContextRecord->Rsi;
+            data["Rdi"] = info->ContextRecord->Rdi;
+            data["R8"] = info->ContextRecord->R8;
+            data["R9"] = info->ContextRecord->R9;
+            data["R10"] = info->ContextRecord->R10;
+            data["R11"] = info->ContextRecord->R11;
+            data["R12"] = info->ContextRecord->R12;
+            data["R13"] = info->ContextRecord->R13;
+            data["R14"] = info->ContextRecord->R14;
+            data["R15"] = info->ContextRecord->R15;
+            data["Rip"] = info->ContextRecord->Rip;
+            data["Xmm0"] = info->ContextRecord->Xmm0;
+            data["Xmm1"] = info->ContextRecord->Xmm1;
+            data["Xmm2"] = info->ContextRecord->Xmm2;
+            data["Xmm3"] = info->ContextRecord->Xmm3;
+            data["Xmm4"] = info->ContextRecord->Xmm4;
+            data["Xmm5"] = info->ContextRecord->Xmm5;
+            data["Xmm6"] = info->ContextRecord->Xmm6;
+            data["Xmm7"] = info->ContextRecord->Xmm7;
+            data["Xmm8"] = info->ContextRecord->Xmm8;
+            data["Xmm9"] = info->ContextRecord->Xmm9;
+            data["Xmm10"] = info->ContextRecord->Xmm10;
+            data["Xmm11"] = info->ContextRecord->Xmm11;
+            data["Xmm12"] = info->ContextRecord->Xmm12;
+            data["Xmm13"] = info->ContextRecord->Xmm13;
+            data["Xmm14"] = info->ContextRecord->Xmm14;
+            data["Xmm15"] = info->ContextRecord->Xmm15;
+
+            // Actually call the callback
+            bool result = cb(data);
+
+            // Again this sucks
+            info->ContextRecord->Dr0 = data["Dr0"];
+            info->ContextRecord->Dr1 = data["Dr1"];
+            info->ContextRecord->Dr2 = data["Dr2"];
+            info->ContextRecord->Dr3 = data["Dr3"];
+            info->ContextRecord->Dr6 = data["Dr6"];
+            info->ContextRecord->Dr7 = data["Dr7"];
+            info->ContextRecord->Rax = data["Rax"];
+            info->ContextRecord->Rcx = data["Rcx"];
+            info->ContextRecord->Rdx = data["Rdx"];
+            info->ContextRecord->Rbx = data["Rbx"];
+            info->ContextRecord->Rsp = data["Rsp"];
+            info->ContextRecord->Rbp = data["Rbp"];
+            info->ContextRecord->Rsi = data["Rsi"];
+            info->ContextRecord->Rdi = data["Rdi"];
+            info->ContextRecord->R8 = data["R8"];
+            info->ContextRecord->R9 = data["R9"];
+            info->ContextRecord->R10 = data["R10"];
+            info->ContextRecord->R11 = data["R11"];
+            info->ContextRecord->R12 = data["R12"];
+            info->ContextRecord->R13 = data["R13"];
+            info->ContextRecord->R14 = data["R14"];
+            info->ContextRecord->R15 = data["R15"];
+            info->ContextRecord->Rip = data["Rip"];
+            info->ContextRecord->Xmm0 = data["Xmm0"];
+            info->ContextRecord->Xmm1 = data["Xmm1"];
+            info->ContextRecord->Xmm2 = data["Xmm2"];
+            info->ContextRecord->Xmm3 = data["Xmm3"];
+            info->ContextRecord->Xmm4 = data["Xmm4"];
+            info->ContextRecord->Xmm5 = data["Xmm5"];
+            info->ContextRecord->Xmm6 = data["Xmm6"];
+            info->ContextRecord->Xmm7 = data["Xmm7"];
+            info->ContextRecord->Xmm8 = data["Xmm8"];
+            info->ContextRecord->Xmm9 = data["Xmm9"];
+            info->ContextRecord->Xmm10 = data["Xmm10"];
+            info->ContextRecord->Xmm11 = data["Xmm11"];
+            info->ContextRecord->Xmm12 = data["Xmm12"];
+            info->ContextRecord->Xmm13 = data["Xmm13"];
+            info->ContextRecord->Xmm14 = data["Xmm14"];
+            info->ContextRecord->Xmm15 = data["Xmm15"];
+
+            // If false we should skip calling the original function
+            if(!result) {
+                info->ContextRecord->Rip = AllocatedRetInstruction();
+            }
+        }));
+
+        return scriptData->bpHooks.size();
+    };
+
+    // You can definitely shorten this code but i dont care
+    lua["hook_asbr_func"] = [&](uintptr_t target, sol::function callback) {
+        // This is fucking stupid, but i do not give a smallest fuck
+        scriptData->bpHooks.push_back(std::make_unique<BreakpointHook>(target + JAPI::GetASBRModuleBase(), callback, [&](PEXCEPTION_POINTERS info, sol::function cb) -> void {
             // Create a new table
             sol::table data = lua.create_table();
             
