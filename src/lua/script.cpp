@@ -15,6 +15,10 @@ void ScriptManager::Init() {
     instance = std::make_unique<ScriptManager>();
 }
 
+sol::state& ScriptManager::GetLuaState(std::string scriptFilePath) {
+    return instance->watchedFiles[scriptFilePath].luaHandle;
+}
+
 void ScriptManager::ExecuteScripts() {
     // Create a new thread for each script
     for (auto& [scriptFilePath, scriptData] : instance->watchedFiles) {

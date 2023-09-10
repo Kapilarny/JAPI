@@ -25,6 +25,7 @@ public:
     static void Init();
 
     static void ExecuteScripts();
+    static sol::state& GetLuaState(std::string scriptFilePath);
 
     static void AddFileToWatch(std::string scriptFilePath);
     static void RemoveFileFromWatch(std::string scriptFilePath);
