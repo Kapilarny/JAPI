@@ -16,7 +16,7 @@ namespace Parser {
         virtual void parse(std::vector<uint8_t> bytes);
         virtual void merge(toml::table data, int priority) = 0;
         virtual std::vector<uint8_t> serialize() = 0;
-    private:
+    protected:
         toml::table table;
     };
 

@@ -9,6 +9,4 @@ public:
     void parse(std::vector<uint8_t> bytes) override;
     void merge(toml::table data, int priority) override;
     std::vector<uint8_t> serialize() override;
-private:
-    toml::table table;
 };
