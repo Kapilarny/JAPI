@@ -68,7 +68,7 @@ __int64 __fastcall sub_645828_Hook(unsigned __int64 a1, unsigned __int64 a2)
             file.read(buffer, 4);
             
             // Swap to small endian
-            std::reverse(&buffer, buffer + 4);
+            std::reverse(&buffer, &buffer + 4);
             int filePriority = *(int*)buffer;
 
             LOG_TRACE("CPKModLoader", "Found .cpk.info file for " + filename + " with priority " + std::to_string(filePriority));

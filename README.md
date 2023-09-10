@@ -21,6 +21,10 @@ Huge thanks to these people for supporting this project:
 
 If you also want to support me, you can donate to me via [PayPal](https://paypal.me/kapilarny) or [Ko-fi](https://ko-fi.com/kapilarny)
 
+## TODO's
+
+- [ ] Refactor this shit code omfg
+
 ## Dependencies
 
 Thanks to these, JojoAPI is possible:
