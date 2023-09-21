@@ -2,10 +2,10 @@
 
 namespace Parser {
     IParserType::IParserType(std::vector<uint8_t> origBytes) {
-        parse(origBytes);
+        parseXfbin(origBytes);
     }
 
-    void IParserType::parse(std::vector<uint8_t> bytes) {
+    void IParserType::parseXfbin(std::vector<uint8_t> bytes) {
         // Do nothing
     }
 
@@ -35,5 +35,16 @@ namespace Parser {
             output += buffer;
         }
         return output;
+    }
+
+    void XFBIN(std::istream& input, std::ostream& output) {
+        char xfbinByte;
+        input.seekg(0, std::ios::end);
+        int size = input.tellg();
+        input.seekg(0, std::ios::beg);
+        for (int i = 0; i < size; i++) {
+            input.read((&xfbinByte), 1);
+            output.put(xfbinByte);
+        }
     }
 } // namespace Parser

@@ -3,6 +3,7 @@
 #include <cstdint>
 #include <bit>
 #include <unordered_map>
+#include <algorithm>
 
 #include <toml.hpp>
 
@@ -13,7 +14,7 @@ namespace Parser {
     public:
         IParserType(std::vector<uint8_t> origBytes);
 
-        virtual void parse(std::vector<uint8_t> bytes);
+        virtual void parseXfbin(std::vector<uint8_t> bytes);
         virtual void merge(toml::table data, int priority) = 0;
         virtual std::vector<uint8_t> serialize() = 0;
     protected:
@@ -28,29 +29,50 @@ namespace Parser {
     inline Endian endianType = Endian::LITTLE;
 
     template <typename T>
-    T toBigEndian(T value) {
-        if (!IS_BIG_ENDIAN) return _byteswap_ulong(value); else return value;
+    T SwapEndianess(T value) {
+        std::reverse(&value, &value + sizeof(value));
+
+        return value;
     }
+
+    template <typename T>
+    T toBigEndian(T value) {
+        if (!IS_BIG_ENDIAN) return SwapEndianess(value); else return value;
+    }
+    
     template <typename T>
     T toLittleEndian(T value) {
-        if (IS_BIG_ENDIAN) return _byteswap_ulong(value); else return value;
+        if (IS_BIG_ENDIAN) return SwapEndianess(value); else return value;
     }
 
     void LittleEndian();
     void BigEndian();
 
     template <typename T>
-    T parse(std::istream& file, T param) {
+    T parse(std::istream& file, size_t offset = 0) {
         T buffer;
         file.read((char*)&buffer, sizeof(buffer));
-        if (typeid(buffer).name() == typeid(int).name()) {
-            if (endianType == Endian::BIG) {
-                buffer = toBigEndian(buffer);
-            } else {
-                buffer = toLittleEndian(buffer);
-            }
+        
+        if (endianType == Endian::BIG) {
+            buffer = toBigEndian(buffer);
+        } else {
+            buffer = toLittleEndian(buffer);
         }
+
         return buffer;
+    }
+
+    template <typename T>
+    size_t parseBytes(std::vector<uint8_t> data, T* returnData, size_t offset) {
+        std::copy(data.begin() + offset, data.begin() + offset + sizeof(T), (uint8_t*)returnData);
+
+        if (endianType == Endian::BIG) {
+            *returnData = toBigEndian(*returnData);
+        } else {
+            *returnData = toLittleEndian(*returnData);
+        }
+
+        return offset + sizeof(T);
     }
 
     std::string parseStr(std::istream& file);
