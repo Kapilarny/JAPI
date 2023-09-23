@@ -81,6 +81,27 @@ namespace Parser {
         return offset + sizeof(T);
     }
 
+    template <>
+    inline size_t parseBytes(std::vector<uint8_t> data, std::string* returnData, size_t offset) {
+        // Read the string to the buffer
+        std::vector<uint8_t> buffer;
+        for (int i = offset; i < data.size(); i++) {
+            if (data[i] == 0) break;
+            buffer.push_back(data[i]);
+        }
+
+        if(endianType == Endian::BIG) {
+            buffer = toBigEndian(buffer);
+        } else {
+            buffer = toLittleEndian(buffer);
+        }
+
+        // Convert the buffer to a string
+        *returnData = std::string(buffer.begin(), buffer.end());
+
+        return offset + buffer.size() + 1;
+    }
+
     std::string parseStr(std::istream& file);
 
     std::string swapBytes(std::string input);
