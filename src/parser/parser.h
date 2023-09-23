@@ -6,6 +6,7 @@
 #include <algorithm>
 
 #include <toml.hpp>
+#include <json.hpp>
 
 #define IS_BIG_ENDIAN (std::endian::native == std::endian::big)
 
@@ -15,10 +16,8 @@ namespace Parser {
         IParserType(std::vector<uint8_t> origBytes);
 
         virtual void parseXfbin(std::vector<uint8_t> bytes);
-        virtual void merge(toml::table data, int priority) = 0;
+        virtual void merge(json data) = 0;
         virtual std::vector<uint8_t> serialize() = 0;
-    protected:
-        toml::table table;
     };
 
     enum class Endian {
@@ -60,6 +59,13 @@ namespace Parser {
         }
 
         return buffer;
+    }
+    
+    template <typename T>
+    void writeData(std::vector<uint8_t>& data, T value, size_t* offset) {
+        std::copy((uint8_t*)&value, (uint8_t*)&value + sizeof(value), data.begin() + *offset);
+
+        *offset += sizeof(value);
     }
 
     template <typename T>

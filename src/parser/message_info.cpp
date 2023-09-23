@@ -25,28 +25,28 @@ struct MessageInfoEntry {
 };
 
 void MessageInfo::parseXfbin(std::vector<uint8_t> bytes) {
+    // Copy the header and footer
+    header = std::vector<uint8_t>(bytes.begin(), bytes.begin() + 284);
+    footer = std::vector<uint8_t>(bytes.end() - 20, bytes.end());
     size_t offset = 284; // Skipping the header fluff
 
-    LittleEndian();
-    uint32_t size;
+    LittleEndian();    
     offset = parseBytes(bytes, &size, offset);
-    
-    uint32_t version, count, firstPtr;
+
+    size = toLittleEndian(size); 
+    printf("Size: %d\n", size);
+
+    uintptr_t firstPtr;
     offset = parseBytes(bytes, &version, offset);
     offset = parseBytes(bytes, &count, offset);
     offset = parseBytes(bytes, &firstPtr, offset);
 
-    table.insert_or_assign("Version", version);
-
+    size_t messageSize = 0;
     for(int i = 0; i < count; i++) {
         MessageInfoEntry entry;
-
-        offset = parseBytes(bytes, &entry.crc32_id, offset);
-        std::string hex_output = std::format("{:08X}", entry.crc32_id);
-        while(hex_output.size() < 8) {
-            hex_output = "0" + hex_output;
-        }
-        entry.crc32_id = hex_output;
+        uint32_t crc32;
+        offset = parseBytes(bytes, &crc32, offset);
+        entry.crc32_id = std::format("{:08X}", crc32);
 
         offset = parseBytes(bytes, &entry.unk1, offset);
         offset = parseBytes(bytes, &entry.unk2, offset);
@@ -56,13 +56,13 @@ void MessageInfo::parseXfbin(std::vector<uint8_t> bytes) {
         parseBytes(bytes, &ptr, offset);
         parseBytes(bytes, &entry.message, offset + ptr);
 
+        messageSize += entry.message.size() + 1;
+
         offset += 8; // Skip "ptr"
 
-        hex_output = std::format("{:08X}", entry.ref_crc32);
-        while(hex_output.size() < 8) {
-            hex_output = "0" + hex_output;
-        }
-        entry.ref_crc32 = hex_output;
+        crc32 = 0;
+        offset = parseBytes(bytes, &crc32, offset);
+        entry.ref_crc32 = std::format("{:08X}", crc32);
 
         offset = parseBytes(bytes, &entry.is_ref, offset);
         offset = parseBytes(bytes, &entry.char_id, offset);
@@ -71,35 +71,132 @@ void MessageInfo::parseXfbin(std::vector<uint8_t> bytes) {
         offset = parseBytes(bytes, &entry.unk6, offset);
         offset = parseBytes(bytes, &entry.unk7, offset);
 
-        toml::table entryTable;
-        entryTable.insert("message", entry.message);
-        entryTable.insert("is_ref", entry.is_ref);
-        entryTable.insert("ref_crc32", entry.ref_crc32);
-        entryTable.insert("char_id", entry.char_id);
-        entryTable.insert("cue_id", entry.cue_id);
+        MessageInfoJSONEntry jsonEntry;
+        jsonEntry.priority = 0;
+        jsonEntry.message = entry.message;
+        jsonEntry.is_ref = entry.is_ref;
+        jsonEntry.ref_crc32 = entry.ref_crc32;
+        jsonEntry.char_id = entry.char_id;
+        jsonEntry.cue_id = entry.cue_id;
 
-        table.insert_or_assign(entry.crc32_id, entryTable);
+        entries[entry.crc32_id] = jsonEntry;
     }
+
+    // Calculate size
+    size = 20 + messageSize + 40 * count;
 }
 
 std::vector<uint8_t> MessageInfo::serialize() {
-    // Serialize the table here
+    uint64_t pointer = 8;
 
-    return std::vector<uint8_t>();
+    // Calculate the size
+    int saveSize = size; // to be used later
+    while (size % 4 != 0) {
+        size++;
+    }
+
+    // Reserve the size
+    std::vector<uint8_t> result = std::vector<uint8_t>(size + header.size() + footer.size() + 12, 0);
+
+    // Copy the header
+    result.insert(result.end(), header.begin(), header.end());
+
+    uint16_t b16; // buffer16
+    uint32_t b32; // buffer32
+    uint64_t b64; // buffer64
+    uint64_t bp; // buffer pointer
+
+    size = toBigEndian(size - 4);
+
+    size_t offset = header.size();
+    uint32_t totalSize = toBigEndian(toBigEndian(size) + 4);
+    
+    // Some XFBIN magic values
+    writeData(result, totalSize, &offset);
+
+    b32 = toBigEndian(1);
+    writeData(result, b32, &offset);
+
+    b32 = toBigEndian(7956736); // magic number haha
+    writeData(result, b32, &offset);
+
+    // XFBIN header data
+    writeData(result, size, &offset);
+    writeData(result, version, &offset);
+    writeData(result, count, &offset);
+    writeData(result, pointer, &offset);
+
+    // Loop through the table
+    bp = 40 * count - 16;
+    for(auto [key, value] : entries) {
+        // Get the crc32
+        b32 = std::stoul(key.c_str(), nullptr, 16);
+        writeData(result, b32, &offset);
+
+        // Write the unknowns
+        b32 = 0;
+        writeData(result, b32, &offset);
+
+        b64 = 0;
+        writeData(result, b64, &offset);
+
+        // Write the message pointer
+        writeData(result, bp, &offset);
+
+        // Write the string
+        std::copy(value.message.begin(), value.message.end(), result.begin() + header.size() + bp);
+        result[header.size() + bp + value.message.size()] = 0;
+
+        bp += value.message.size() + 1 - 40;
+
+        // ref_crc32
+        b32 = std::stoul(value.ref_crc32.c_str(), nullptr, 16);
+        b32 = toBigEndian(b32);
+        writeData(result, b32, &offset);
+    
+        // is_ref
+        writeData(result, value.is_ref, &offset);
+        
+        // char_id
+        writeData(result, value.char_id, &offset);
+
+        // cue_id
+        writeData(result, value.cue_id, &offset);
+
+        // unknowns
+        b16 = 0;
+        writeData(result, b16, &offset);
+
+        b32 = 0;
+        writeData(result, b32, &offset);
+    }
+
+    while(saveSize % 4 != 0) {
+        result[saveSize] = 0;
+        saveSize++;
+    }
+
+    // Copy the footer
+    result.insert(result.end() - footer.size(), footer.begin(), footer.end());
+
+    return result;
 }
 
-void MessageInfo::merge(toml::table data, int priority) {
-    // Get the crc32_id from the table
-    std::string crc32_id = data["crc32_id"].value_or("null");
+void MessageInfo::merge(json data) {
+    MessageInfoJSONEntry entry;
+    entry.priority = data["priority"];
 
-    // Check if the crc32_id is null
-    if (crc32_id == "null") return;
-
-    // Check if the crc32_id is already in the table
-    if (table.contains(crc32_id)) {
-        int existingPriority = table[crc32_id]["priority"].value_or(0);
-        if(existingPriority > priority) return;
+    if(entries.contains(data["crc32_id"])) {
+        if(entries[data["crc32_id"]].priority < entry.priority) {
+            return;
+        }
     }
-    
-    table.insert_or_assign(crc32_id, data);
+
+    entry.message = data["message"];
+    entry.is_ref = data["is_ref"];
+    entry.ref_crc32 = data["ref_crc32"];
+    entry.char_id = data["char_id"];
+    entry.cue_id = data["cue_id"];
+
+    entries[data["crc32_id"]] = entry;
 }
