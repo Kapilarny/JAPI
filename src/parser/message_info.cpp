@@ -26,50 +26,51 @@ struct MessageInfoEntry {
 
 void MessageInfo::parseXfbin(std::vector<uint8_t> bytes) {
     // Copy the header and footer
-    header = std::vector<uint8_t>(bytes.begin(), bytes.begin() + 284);
-    footer = std::vector<uint8_t>(bytes.end() - 20, bytes.end());
-    size_t offset = 284; // Skipping the header fluff
+    header.reserve(284);
+    footer.reserve(20);
 
-    LittleEndian();    
-    offset = parseBytes(bytes, &size, offset);
+    // Copy the first 284 bytes to the header
+    std::copy(bytes.begin(), bytes.begin() + 284, std::back_inserter(header));
 
-    size = toLittleEndian(size); 
-    printf("Size: %d\n", size);
+    // Copy the last 20 bytes to the footer
+    std::copy(bytes.end() - 20, bytes.end(), std::back_inserter(footer)); 
+
+    size_t offset = 288; // Skipping the header fluff
 
     uintptr_t firstPtr;
-    offset = parseBytes(bytes, &version, offset);
-    offset = parseBytes(bytes, &count, offset);
-    offset = parseBytes(bytes, &firstPtr, offset);
+    parseBytes(bytes, &version, &offset);
+    parseBytes(bytes, &count, &offset);
+    parseBytes(bytes, &firstPtr, &offset);
 
     size_t messageSize = 0;
     for(int i = 0; i < count; i++) {
         MessageInfoEntry entry;
         uint32_t crc32;
-        offset = parseBytes(bytes, &crc32, offset);
+        parseBytes(bytes, &crc32, &offset);
         entry.crc32_id = std::format("{:08X}", crc32);
 
-        offset = parseBytes(bytes, &entry.unk1, offset);
-        offset = parseBytes(bytes, &entry.unk2, offset);
-        offset = parseBytes(bytes, &entry.unk3, offset);
+        parseBytes(bytes, &entry.unk1, &offset);
+        parseBytes(bytes, &entry.unk2, &offset);
+        parseBytes(bytes, &entry.unk3, &offset);
 
         uint64_t ptr;
-        parseBytes(bytes, &ptr, offset);
-        parseBytes(bytes, &entry.message, offset + ptr);
+        parseBytes(bytes, &ptr, &offset);
+
+        size_t ptrOffset = offset + ptr - 8;
+        parseBytes(bytes, &entry.message, &ptrOffset);
 
         messageSize += entry.message.size() + 1;
 
-        offset += 8; // Skip "ptr"
-
         crc32 = 0;
-        offset = parseBytes(bytes, &crc32, offset);
+        parseBytes(bytes, &crc32, &offset);
         entry.ref_crc32 = std::format("{:08X}", crc32);
 
-        offset = parseBytes(bytes, &entry.is_ref, offset);
-        offset = parseBytes(bytes, &entry.char_id, offset);
-        offset = parseBytes(bytes, &entry.cue_id, offset);
+        parseBytes(bytes, &entry.is_ref, &offset);
+        parseBytes(bytes, &entry.char_id, &offset);
+        parseBytes(bytes, &entry.cue_id, &offset);
 
-        offset = parseBytes(bytes, &entry.unk6, offset);
-        offset = parseBytes(bytes, &entry.unk7, offset);
+        parseBytes(bytes, &entry.unk6, &offset);
+        parseBytes(bytes, &entry.unk7, &offset);
 
         MessageInfoJSONEntry jsonEntry;
         jsonEntry.priority = 0;
@@ -83,42 +84,26 @@ void MessageInfo::parseXfbin(std::vector<uint8_t> bytes) {
     }
 
     // Calculate size
-    size = 20 + messageSize + 40 * count;
+    size = 20 + messageSize + 40 * count - 3;
 }
 
 std::vector<uint8_t> MessageInfo::serialize() {
     uint64_t pointer = 8;
 
-    // Calculate the size
-    int saveSize = size; // to be used later
-    while (size % 4 != 0) {
-        size++;
-    }
-
     // Reserve the size
-    std::vector<uint8_t> result = std::vector<uint8_t>(size + header.size() + footer.size() + 12, 0);
+    std::vector<uint8_t> result = std::vector<uint8_t>(size + header.size() + footer.size() + 4, 0);
 
-    // Copy the header
-    result.insert(result.end(), header.begin(), header.end());
+    // Write the header
+    std::copy(header.begin(), header.end(), result.begin());
 
     uint16_t b16; // buffer16
     uint32_t b32; // buffer32
     uint64_t b64; // buffer64
     uint64_t bp; // buffer pointer
 
-    size = toBigEndian(size - 4);
+    size_t offset = 284;
 
-    size_t offset = header.size();
-    uint32_t totalSize = toBigEndian(toBigEndian(size) + 4);
-    
-    // Some XFBIN magic values
-    writeData(result, totalSize, &offset);
-
-    b32 = toBigEndian(1);
-    writeData(result, b32, &offset);
-
-    b32 = toBigEndian(7956736); // magic number haha
-    writeData(result, b32, &offset);
+    size = SwapEndianess(size); // Swap to big endian
 
     // XFBIN header data
     writeData(result, size, &offset);
@@ -126,8 +111,9 @@ std::vector<uint8_t> MessageInfo::serialize() {
     writeData(result, count, &offset);
     writeData(result, pointer, &offset);
 
-    // Loop through the table
-    bp = 40 * count - 16;
+    uint32_t totalMessageSize = 0;
+    size_t startEntryOffset = offset;
+    size_t entriesSize = 40 * count;
     for(auto [key, value] : entries) {
         // Get the crc32
         b32 = std::stoul(key.c_str(), nullptr, 16);
@@ -140,18 +126,22 @@ std::vector<uint8_t> MessageInfo::serialize() {
         b64 = 0;
         writeData(result, b64, &offset);
 
+        // Calculate the bp
+        bp = startEntryOffset + entriesSize + totalMessageSize;
+
+        // Write the message
+        memcpy(result.data() + bp, value.message.c_str(), value.message.size() + 1);
+        totalMessageSize += value.message.size() + 1;
+
+        // Reajust the bp
+        bp -= offset;
+
         // Write the message pointer
         writeData(result, bp, &offset);
 
-        // Write the string
-        std::copy(value.message.begin(), value.message.end(), result.begin() + header.size() + bp);
-        result[header.size() + bp + value.message.size()] = 0;
-
-        bp += value.message.size() + 1 - 40;
-
         // ref_crc32
         b32 = std::stoul(value.ref_crc32.c_str(), nullptr, 16);
-        b32 = toBigEndian(b32);
+        // b32 = toBigEndian(b32);
         writeData(result, b32, &offset);
     
         // is_ref
@@ -171,13 +161,8 @@ std::vector<uint8_t> MessageInfo::serialize() {
         writeData(result, b32, &offset);
     }
 
-    while(saveSize % 4 != 0) {
-        result[saveSize] = 0;
-        saveSize++;
-    }
-
     // Copy the footer
-    result.insert(result.end() - footer.size(), footer.begin(), footer.end());
+    memcpy(result.data() + result.size() - footer.size(), footer.data(), footer.size());
 
     return result;
 }
@@ -186,10 +171,13 @@ void MessageInfo::merge(json data) {
     MessageInfoJSONEntry entry;
     entry.priority = data["priority"];
 
-    if(entries.contains(data["crc32_id"])) {
-        if(entries[data["crc32_id"]].priority < entry.priority) {
-            return;
-        }
+    auto crc = data["crc32_id"];
+    if(entries.contains(crc)) {
+        if(entries[crc].priority < entry.priority) return;
+
+        size -= entries[crc].message.size() + 1;
+    } else {
+        count++;
     }
 
     entry.message = data["message"];
@@ -198,5 +186,8 @@ void MessageInfo::merge(json data) {
     entry.char_id = data["char_id"];
     entry.cue_id = data["cue_id"];
 
-    entries[data["crc32_id"]] = entry;
+    // update size
+    size += entry.message.size() + 1;
+
+    entries[crc] = entry;
 }

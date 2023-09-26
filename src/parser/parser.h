@@ -6,9 +6,9 @@
 #include <algorithm>
 
 #include <toml.hpp>
-#include <json.hpp>
+#include "json.hpp"
 
-#define IS_BIG_ENDIAN (std::endian::native == std::endian::big)
+using json = nlohmann::json;
 
 namespace Parser {
     class IParserType {
@@ -20,89 +20,48 @@ namespace Parser {
         virtual std::vector<uint8_t> serialize() = 0;
     };
 
-    enum class Endian {
-        LITTLE,
-        BIG
-    };
-
-    inline Endian endianType = Endian::LITTLE;
-
     template <typename T>
-    T SwapEndianess(T value) {
-        std::reverse(&value, &value + sizeof(value));
+    inline T SwapEndianess(T value) {
+        uint8_t* bytes = (uint8_t*)&value;
+        std::reverse(bytes, bytes + sizeof(T));
+
+        return value;
+    }
+
+    template <>
+    inline std::string SwapEndianess(std::string value) {
+        std::reverse(value.begin(), value.end());
 
         return value;
     }
 
     template <typename T>
-    T toBigEndian(T value) {
-        if (!IS_BIG_ENDIAN) return SwapEndianess(value); else return value;
-    }
-    
-    template <typename T>
-    T toLittleEndian(T value) {
-        if (IS_BIG_ENDIAN) return SwapEndianess(value); else return value;
-    }
-
-    void LittleEndian();
-    void BigEndian();
-
-    template <typename T>
-    T parse(std::istream& file, size_t offset = 0) {
-        T buffer;
-        file.read((char*)&buffer, sizeof(buffer));
-        
-        if (endianType == Endian::BIG) {
-            buffer = toBigEndian(buffer);
-        } else {
-            buffer = toLittleEndian(buffer);
-        }
-
-        return buffer;
-    }
-    
-    template <typename T>
-    void writeData(std::vector<uint8_t>& data, T value, size_t* offset) {
-        std::copy((uint8_t*)&value, (uint8_t*)&value + sizeof(value), data.begin() + *offset);
-
+    inline void writeData(const std::vector<uint8_t>& data, T value, size_t* offset) {
+        memcpy((uint8_t*)data.data() + *offset, &value, sizeof(value));
         *offset += sizeof(value);
     }
 
     template <typename T>
-    size_t parseBytes(std::vector<uint8_t> data, T* returnData, size_t offset) {
-        std::copy(data.begin() + offset, data.begin() + offset + sizeof(T), (uint8_t*)returnData);
-
-        if (endianType == Endian::BIG) {
-            *returnData = toBigEndian(*returnData);
-        } else {
-            *returnData = toLittleEndian(*returnData);
-        }
-
-        return offset + sizeof(T);
+    inline void parseBytes(const std::vector<uint8_t>& data, T* returnData, size_t* offset) {
+        memcpy(returnData, (uint8_t*)data.data() + *offset, sizeof(T));
+        *offset += sizeof(T);
     }
 
     template <>
-    inline size_t parseBytes(std::vector<uint8_t> data, std::string* returnData, size_t offset) {
-        // Read the string to the buffer
+    inline void parseBytes(const std::vector<uint8_t>& data, std::string* returnData, size_t* offset) {
+        // Create a buffer
         std::vector<uint8_t> buffer;
-        for (int i = offset; i < data.size(); i++) {
-            if (data[i] == 0) break;
-            buffer.push_back(data[i]);
+
+        // Copy the bytes until we hit a null terminator
+        while (data[*offset] != 0) {
+            buffer.push_back(data[*offset]);
+            *offset += 1;
         }
 
-        if(endianType == Endian::BIG) {
-            buffer = toBigEndian(buffer);
-        } else {
-            buffer = toLittleEndian(buffer);
-        }
+        // Copy the buffer to the string
+        returnData->resize(buffer.size());
 
-        // Convert the buffer to a string
-        *returnData = std::string(buffer.begin(), buffer.end());
-
-        return offset + buffer.size() + 1;
+        memcpy((uint8_t*)returnData->data(), buffer.data(), buffer.size());
+        *offset += buffer.size() + 1;
     }
-
-    std::string parseStr(std::istream& file);
-
-    std::string swapBytes(std::string input);
 } // namespace Parser
