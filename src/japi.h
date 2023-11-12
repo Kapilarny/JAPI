@@ -9,6 +9,7 @@
 class JAPI {
 public:
     static void Init(HINSTANCE hinstDLL);
+    static void InitThread(HINSTANCE hinstDLL);
 
     static uint64_t GetASBRModuleBase();
     static HANDLE GetASBRProcessHandle();

@@ -43,7 +43,9 @@ void JAPI::Init(HINSTANCE hinstDLL) {
 
     JINFO("Initialized JojoAPI!");
     instance->LoadMods();
+}
 
+void JAPI::InitThread(HINSTANCE hInstDll) {
     // For now janky loop
     while(true) {
         ScriptManager::ExecuteScripts();
