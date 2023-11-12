@@ -18,6 +18,7 @@ You can find the documentation [here](https://kapilarny.me/JAPI-Docs/)
 Huge thanks to these people for supporting this project:
 
 - Hydra
+- Damn.Broh
 
 If you also want to support me, you can donate to me via [PayPal](https://paypal.me/kapilarny) or [Ko-fi](https://ko-fi.com/kapilarny)
 
