@@ -12,6 +12,8 @@ set(CMAKE_STATIC_LIBRARY_PREFIX "")
 add_subdirectory(external/minhook)
 add_subdirectory(external/asmtk)
 
+add_subdirectory(updater)
+
 file(GLOB_RECURSE SOURCES "src/*.c" "src/*.cpp" "src/*.h" "src/*.hpp")
 
 add_link_options(-static -static-libgcc -static-libstdc++ -Wno-pointer-arith)
