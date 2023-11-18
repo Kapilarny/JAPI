@@ -4,17 +4,19 @@
 #include <windows.h>
 #include <winhttp.h>
 
+#include "logger.h"
+
 Version GetLatestJAPIVersion() {
     std::vector<uint8_t> buffer = DownloadFile("raw.githubusercontent.com/Kapilarny/JAPI/master/version.txt");
 
     if(buffer.empty()) {
-        std::cout << "Failed to download the latest JAPI version! Is the internet down?\n";
+        JERROR("Failed to download get the latest JAPI version! Is the internet down?");
         return {0, 0, 0};
     }
 
     std::string version_str(buffer.begin(), buffer.end());
 
-    std::cout << "Latest JAPI version: " + version_str + "\n";
+    JINFO("Latest JAPI version: " + version_str);
 
     return ParseVersion(version_str);
 }
@@ -23,7 +25,7 @@ std::vector<std::string> GetLatestJAPIDlls() {
     std::vector<uint8_t> buffer = DownloadFile("raw.githubusercontent.com/Kapilarny/JAPI/master/dlls.txt");
 
     if(buffer.empty()) {
-        std::cout << "Failed to download the latest JAPI dlls! Is the internet down?\n";
+        JERROR("Failed to download the latest JAPI dlls! Is the internet down?");
         return {};
     }
 
@@ -57,11 +59,11 @@ bool Is404(std::vector<uint8_t>& buffer) {
 std::vector<uint8_t> DownloadFile(std::string url) {
     std::vector<uint8_t> buffer;
 
-    std::cout << "Downloading " + url + "\n";
+    JINFO("Downloading " + url);
 
     HINTERNET hSession = WinHttpOpen(L"ASBR Updater/1.0", WINHTTP_ACCESS_TYPE_DEFAULT_PROXY, WINHTTP_NO_PROXY_NAME, WINHTTP_NO_PROXY_BYPASS, 0);
     if(!hSession) {
-        std::cout << "Failed to open WinHTTP session!\n";
+        JERROR("Failed to open WinHTTP session!\n");
         return buffer;
     }
 
@@ -76,11 +78,9 @@ std::vector<uint8_t> DownloadFile(std::string url) {
 
     std::wstring hostname(url_start, url_end);
 
-    std::cout << "Hostname: " + std::string(hostname.begin(), hostname.end()) + "\n";
-
     HINTERNET hConnect = WinHttpConnect(hSession, hostname.c_str(), INTERNET_DEFAULT_HTTPS_PORT, 0);
     if(!hConnect) {
-        std::cout << "Failed to connect to the host!\n";
+        JERROR("Failed to connect to the host!");
 
         WinHttpCloseHandle(hSession);
         return buffer;
@@ -92,11 +92,9 @@ std::vector<uint8_t> DownloadFile(std::string url) {
 
     std::wstring path(path_start, path_end);
 
-    std::cout << "Path: " + std::string(path.begin(), path.end()) + "\n";
-
     HINTERNET hRequest = WinHttpOpenRequest(hConnect, L"GET", path.c_str(), NULL, WINHTTP_NO_REFERER, WINHTTP_DEFAULT_ACCEPT_TYPES, WINHTTP_FLAG_SECURE);
     if(!hRequest) {
-        std::cout << "Failed to open the request!\n";
+        JERROR("Failed to open the request!");
 
         WinHttpCloseHandle(hConnect);
         WinHttpCloseHandle(hSession);
@@ -104,7 +102,7 @@ std::vector<uint8_t> DownloadFile(std::string url) {
     }
 
     if(!WinHttpSendRequest(hRequest, WINHTTP_NO_ADDITIONAL_HEADERS, 0, WINHTTP_NO_REQUEST_DATA, 0, 0, 0)) {
-        std::cout << "Failed to send the request!\n";
+        JERROR("Failed to send the request!");
 
         WinHttpCloseHandle(hRequest);
         WinHttpCloseHandle(hConnect);
@@ -113,7 +111,7 @@ std::vector<uint8_t> DownloadFile(std::string url) {
     }
 
     if(!WinHttpReceiveResponse(hRequest, NULL)) {
-        std::cout << "Failed to receive the response!\n";
+        JERROR("Failed to receive the response!");
 
         WinHttpCloseHandle(hRequest);
         WinHttpCloseHandle(hConnect);
@@ -127,7 +125,7 @@ std::vector<uint8_t> DownloadFile(std::string url) {
     do {
         dwSize = 0;
         if(!WinHttpQueryDataAvailable(hRequest, &dwSize)) {
-            std::cout << "Failed to query data!\n";
+            JERROR("Failed to query data!");
 
             WinHttpCloseHandle(hRequest);
             WinHttpCloseHandle(hConnect);
@@ -141,7 +139,7 @@ std::vector<uint8_t> DownloadFile(std::string url) {
 
         buffer.resize(buffer.size() + dwSize);
         if(!WinHttpReadData(hRequest, buffer.data() + totalDownloaded, dwSize, &dwDownloaded)) {
-            std::cout << "Failed to read data!\n";
+            JERROR("Failed to read data!");
 
             WinHttpCloseHandle(hRequest);
             WinHttpCloseHandle(hConnect);
@@ -152,14 +150,14 @@ std::vector<uint8_t> DownloadFile(std::string url) {
         totalDownloaded += dwDownloaded;
     } while(dwSize > 0);
 
-    std::cout << "Downloaded " + std::to_string(buffer.size()) + " bytes\n";
+    JINFO("Downloaded " + std::to_string(buffer.size()) + " bytes");
 
     WinHttpCloseHandle(hRequest);
     WinHttpCloseHandle(hConnect);
     WinHttpCloseHandle(hSession);
 
     if(Is404(buffer)) {
-        std::cout << "404: Not Found\n";
+        JERROR("404: Not Found\n");
         buffer.clear();
     }
 
@@ -183,7 +181,10 @@ uint16_t DownloadASBR() {
     std::vector<uint8_t> buffer = DownloadFile("raw.githubusercontent.com/Kapilarny/JAPI/files/asbr/" + str_hash + ".exe");
 
     if(buffer.empty()) {
-        std::cout << "Failed to download ASBR! Is this hash correct? (" + str_hash + ")\n";
+        JFATAL("Failed to download ASBR! Is this hash correct? (" + str_hash + ") ABORTING");
+
+        exit(1);
+
         return -1;
     }
 
@@ -192,9 +193,21 @@ uint16_t DownloadASBR() {
     asbr.write((char*)buffer.data(), buffer.size());
     asbr.close();
 
-    std::cout << "ASBR.exe updated!\n";
+    // Create a new hash
+    std::ifstream asbr_file("ASBR.exe");
+    if(!asbr_file.good()) {
+        JFATAL("Failed to open the new ASBR.exe to calculate the hash! ABORTING\n");
 
-    return hash;
+        exit(1);
+
+        return -1;
+    }
+
+    uint16_t new_hash = ComputeCRC16Hash(asbr_file);
+
+    JINFO("ASBR.exe updated!");
+
+    return new_hash;
 }
 
 void DownloadAdditionalDLLs() {
@@ -204,7 +217,7 @@ void DownloadAdditionalDLLs() {
         std::vector<uint8_t> buffer = DownloadFile("raw.githubusercontent.com/Kapilarny/JAPI/files/dlls/" + dll);
 
         if(buffer.empty()) {
-            std::cout << "Failed to download " + dll + "! Is this correct?\n";
+            JFATAL("Failed to download " + dll + "! No internet?");
             continue;
         }
 
@@ -213,7 +226,7 @@ void DownloadAdditionalDLLs() {
         dll_file.write((char*)buffer.data(), buffer.size());
         dll_file.close();
 
-        std::cout << dll + " updated!\n";
+        JINFO(dll + " updated!");
     }
 }
 
@@ -227,7 +240,7 @@ void DownloadJAPI(Version version) {
     std::vector<uint8_t> buffer = DownloadFile("raw.githubusercontent.com/Kapilarny/JAPI/files/japi/" + VersionString(version) + ".dll");
 
     if(buffer.empty()) {
-        std::cout << "Failed to download JAPI! Is this version correct? (" + VersionString(version) + ")\n";
+        JFATAL("Failed to download JAPI! Is this version correct? (" + VersionString(version) + ")");
         return;
     }
 
@@ -236,35 +249,14 @@ void DownloadJAPI(Version version) {
     d3dcompiler_47.write((char*)buffer.data(), buffer.size());
     d3dcompiler_47.close();
 
-    std::cout << "JAPI updated!\n";
+    JINFO("JAPI updated!");
 }
 
-uint16_t InstallASBRAndGetHash() {
-    DownloadASBR();
-
-    std::ifstream asbr_file("ASBR.exe");
-    if(!asbr_file.good()) {
-        std::cout << "Failed to open the new ASBR.exe to calculate the hash! ABORTING\n";
-        return 1;
-    }
-
-    return ComputeCRC16Hash(asbr_file);
-}
-
-void RemoveEAC() {
-    // Remove the EAC
-
-    // EasyAntiCheat_EOS_Setup.exe uninstall 3930c3bc57134e19ab46e07c967aa013
-    // Run the uninstaller
-    system("EasyAntiCheat/EasyAntiCheat_EOS_Setup.exe uninstall 3930c3bc57134e19ab46e07c967aa013");
-
-    // Wait 3 seconds for good measure
-    Sleep(3000);
-
+void CreateSteamAppID() {
     // Create steam_appid.txt
     std::ofstream steam_appid("steam_appid.txt", std::ios::out | std::ios::trunc);
     steam_appid << "1372110";
     steam_appid.close();
 
-    std::cout << "EAC removed!\n";
+    JINFO("Created steam_appid.txt");
 }

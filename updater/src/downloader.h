@@ -16,4 +16,4 @@ std::vector<std::string> GetLatestJAPIDlls();
 uint16_t DownloadASBR();
 void DownloadJAPI(Version version);
 void DownloadAdditionalDLLs();
-void RemoveEAC();
+void CreateSteamAppID();

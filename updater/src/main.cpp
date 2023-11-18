@@ -7,13 +7,14 @@
 #include "cppcrc.h"
 #include "config.h"
 #include "utils.h"
+#include "logger.h"
+
+void SaveConfig(toml::table& config) {
+    std::ofstream config_file("japi/config/updater.cfg", std::ios::out | std::ios::trunc);
+    config_file << config;
+}
 
 int main() {
-    // Create the console window
-    AllocConsole();
-    FILE* f;
-    freopen_s(&f, "CONOUT$", "w", stdout);
-
     // Check if japi/ exists
     if (!std::filesystem::exists("japi")) {
         std::filesystem::create_directory("japi");
@@ -25,24 +26,26 @@ int main() {
     }
 
     toml::table updater_config;
-    bool should_update = true;
-    bool first_run = false;
-    bool delete_eac = false;
+    bool should_update = false;
     bool ignore_hashes = false;
-    std::string japi_version_installed = "";
-    uint16_t asbr_hash = 0;
 
     // Check if japi/config/updater.toml exists
-    if(!std::filesystem::exists("japi/config/updater.toml")) {
-        std::cout << "japi/config/updater.toml is missing! Creating a new one...\n";
+    if(!std::filesystem::exists("japi/config/updater.cfg")) {
+        JINFO("japi/config/updater.cfg is missing! Creating a new one...");
         updater_config = toml::table();
     } else {
-        updater_config = toml::parse("japi/config/updater.toml");
+        updater_config = toml::parse_file("japi/config/updater.cfg");
     }
 
-    std::ofstream updater_config_file("japi/config/updater.toml", std::ios::out | std::ios::trunc);
+    bool open_console = ConfigBind(updater_config, "open_console", true);
+    bool first_run = ConfigBind(updater_config, "first_run", true);
 
-    first_run = ConfigBind(updater_config, "first_run", true);
+    SetShouldLogToConsole(open_console);
+
+    if(open_console) {
+        AllocConsole();
+        freopen_s((FILE**)stdout, "CONOUT$", "w", stdout);
+    }
 
     if(first_run) {
         int auto_update = MessageBoxA(NULL, "Do you want to enable auto-updates?", "JojoAPI Updater", MB_YESNO | MB_ICONQUESTION);
@@ -50,34 +53,32 @@ int main() {
 
         updater_config.insert_or_assign("autoupdate", should_update);
 
-        int should_remove_eac = MessageBoxA(NULL, "Do you want uninstall EAC?", "JojoAPI Updater", MB_YESNO | MB_ICONQUESTION);
-        delete_eac = should_remove_eac == IDYES;
-
-        updater_config.insert_or_assign("delete_eac", delete_eac);
-
         updater_config.insert_or_assign("first_run", false);
     }
 
     should_update = ConfigBind(updater_config, "autoupdate", true);
-    delete_eac = ConfigBind(updater_config, "delete_eac", true);
     ignore_hashes = ConfigBind(updater_config, "ignore_hashes", false);
-    japi_version_installed = ConfigBind(updater_config, "version", "0.0.0");
-    asbr_hash = ConfigBind(updater_config, "asbr_hash", 0);
+
+    std::string japi_version_installed = ConfigBind(updater_config, "version", "0.0.0");
+    uint16_t asbr_hash = ConfigBind(updater_config, "asbr_hash", 0);
 
     // Save the config
-    updater_config_file << updater_config;
+    SaveConfig(updater_config);
 
     if(first_run) {
+        // Create the steam_appid.txt file
+        CreateSteamAppID();
+
         // Get the new hash
         uint16_t new_hash = DownloadASBR();
 
         if(new_hash == 0) {
-            std::cout << "Failed to download a new ASBR release! Is this hash correct? (" + std::to_string(new_hash) + ")\n";
-            std::cout << "Aborting...\n";
+            JFATAL("Failed to download a new ASBR release! Is this hash correct? (" + std::to_string(new_hash) + ")");
+            JFATAL("Aborting...");
 
             updater_config.insert_or_assign("first_run", true);
 
-            updater_config_file << updater_config;
+            SaveConfig(updater_config);
 
             return 1;
         }
@@ -88,21 +89,19 @@ int main() {
         DownloadJAPI(GetLatestJAPIVersion());
         DownloadAdditionalDLLs();
 
-        if(delete_eac) {
-            RemoveEAC();
-        }
+        updater_config.insert_or_assign("version", VersionString(GetLatestJAPIVersion()));
 
-        std::cout << "First run complete!\n";
+        // Save the config.
+        SaveConfig(updater_config);
+
+        JINFO("First run complete!");
         LaunchGame();
-
-        // Save the config
-        updater_config_file << updater_config;
 
         return 0;
     }
 
     if(!should_update) {
-        std::cout << "Skipping updating process...\n";
+        JINFO("Skipping updating process...");
 
         LaunchGame();
 
@@ -111,22 +110,22 @@ int main() {
 
     std::ifstream asbr_file("ASBR.exe");
     if(!asbr_file.good()) {
-        std::cout << "ASBR.exe is missing! Is this the right directory? ABORTING\n";
+        JFATAL("ASBR.exe is missing! Is this the right directory? ABORTING");
         return 1;
     }
 
     // Check the ASBR.exe hash
     uint16_t computed_hash = ComputeCRC16Hash(asbr_file);
 
-    if(computed_hash != asbr_hash) {
-        std::cout << "ASBR.exe failed the current checksum! Grabbing the new executable...\n";
+    if(computed_hash != asbr_hash && !ignore_hashes) {
+        JDEBUG("ASBR.exe failed the current checksum! Grabbing the new executable...");
 
         // Get the new hash
         uint16_t new_hash = DownloadASBR();
 
         if(new_hash == 0) {
-            std::cout << "Failed to download a new ASBR release! Is this hash correct? (" + std::to_string(new_hash) + ")\n";
-            std::cout << "Skipping updating process...\n";
+            JERROR("Failed to download a new ASBR release! Is this hash correct? (" + std::to_string(new_hash) + ")");
+            JERROR("Skipping updating process...");
 
             LaunchGame();
 
@@ -141,7 +140,7 @@ int main() {
     Version latest_version = GetLatestJAPIVersion();
 
     if(IsBiggerVersion(latest_version, ParseVersion(japi_version_installed)) && !ignore_hashes) {
-        std::cout << "A new version of JAPI is available! Downloading...\n";
+        JDEBUG("A new version of JAPI is available! Downloading...");
 
         DownloadJAPI(latest_version);
         DownloadAdditionalDLLs();
@@ -151,8 +150,7 @@ int main() {
     }
 
     // Save the config
-    updater_config_file << updater_config;
-
+    SaveConfig(updater_config);
     LaunchGame();
 
     return 0;

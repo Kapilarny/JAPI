@@ -13,6 +13,7 @@ typedef struct Version {
 } Version;
 
 void LaunchGame();
+void UninstallEAC();
 
 inline uint16_t ComputeCRC16Hash(std::ifstream& file) {
     std::vector<uint8_t> buffer(std::istreambuf_iterator<char>(file), {});

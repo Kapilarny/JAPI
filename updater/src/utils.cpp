@@ -3,6 +3,8 @@
 #include <Windows.h>
 #include <stdio.h>
 
+#include "logger.h"
+
 void LaunchGame() {
     // Run ASBR.exe
     STARTUPINFOA si;
@@ -19,7 +21,7 @@ void LaunchGame() {
     // Append the ASBR.exe path
     strcat(current_directory, "\\ASBR.exe");
 
-    std::cout << current_directory << "\n";
+    JINFO(current_directory);
 
     // Start the child process.
     if(!CreateProcessA(
@@ -34,7 +36,7 @@ void LaunchGame() {
         &si, // Pointer to STARTUPINFO structure
         &pi // Pointer to PROCESS_INFORMATION structure
     )) {
-        printf("CreateProcess failed (%d).\n", GetLastError());
+        JFATAL("CreateProcess failed (" + std::to_string(GetLastError()) + ")");
         return;
     }
 }
