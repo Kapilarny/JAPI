@@ -25,17 +25,17 @@ void LaunchGame() {
 
     // Start the child process.
     if(!CreateProcessA(
-        NULL, // No module name
-        current_directory, // Command line
-        NULL, // Process handle not inheritable
-        NULL, // Thread handle not inheritable
-        FALSE, // Set handle inheritance to FALSE
-        0, // No creation flags
-        NULL, // Use parent's environment block
-        NULL, // Use parent's starting directory
-        &si, // Pointer to STARTUPINFO structure
-        &pi // Pointer to PROCESS_INFORMATION structure
-    )) {
+                NULL, // No module name
+                current_directory, // Command line
+                NULL, // Process handle not inheritable
+                NULL, // Thread handle not inheritable
+                FALSE, // Set handle inheritance to FALSE
+                0, // No creation flags
+                NULL, // Use parent's environment block
+                NULL, // Use parent's starting directory
+                &si, // Pointer to STARTUPINFO structure
+                &pi // Pointer to PROCESS_INFORMATION structure
+            )) {
         JFATAL("CreateProcess failed (" + std::to_string(GetLastError()) + ")");
         return;
     }
