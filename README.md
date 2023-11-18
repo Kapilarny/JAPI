@@ -5,9 +5,11 @@ JojoAPI is a modding API for Jojo's Bizzare Adventure All-Star Battle R. It's in
 
 ## Installation
 
-1. Download the latest release from the [releases page](https://github.com/Kapilarny/JAPI/releases)
-2. Drag&drop the zip contents into your game folder (where the `ASBR.exe` is located)
-3. Enjoy!
+1. Download the latest release of `JAPIUpdater.exe` from the [releases page](https://github.com/Kapilarny/JAPI/releases)
+2. Drag&drop the file into your game folder (where the `ASBR.exe` is located)
+3. Run `JAPIUpdater.exe` instead of `ASBR.exe`
+4. Enjoy!
+
 
 ## Documentation
 
