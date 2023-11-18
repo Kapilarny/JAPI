@@ -26,55 +26,134 @@ int main() {
 
     toml::table updater_config;
     bool should_update = true;
+    bool first_run = false;
+    bool delete_eac = false;
     bool ignore_hashes = false;
-    uint32_t japi_version_installed = 0;
+    std::string japi_version_installed = "";
     uint16_t asbr_hash = 0;
-    uint16_t japi_hash = 0;
 
     // Check if japi/config/updater.toml exists
     if(!std::filesystem::exists("japi/config/updater.toml")) {
-        std::ofstream updater_config_file("japi/config/updater.toml", std::ios::out | std::ios::trunc);
-
+        std::cout << "japi/config/updater.toml is missing! Creating a new one...\n";
         updater_config = toml::table();
-        should_update = ConfigBind(updater_config, "autoupdate", true);
-        ignore_hashes = ConfigBind(updater_config, "ignore_hashes", false);
-        japi_version_installed = ConfigBind(updater_config, "version", 0);
-        asbr_hash = ConfigBind(updater_config, "asbr_hash", 0);
-        japi_hash = ConfigBind(updater_config, "japi_hash", 0);
-
-        updater_config_file << updater_config;
+    } else {
+        updater_config = toml::parse("japi/config/updater.toml");
     }
 
-    if(!japi_version_installed || !asbr_hash) {
-        // TODO: Install ASBR.exe and d3dcompiler_47.dll
+    std::ofstream updater_config_file("japi/config/updater.toml", std::ios::out | std::ios::trunc);
+
+    first_run = ConfigBind(updater_config, "first_run", true);
+
+    if(first_run) {
+        int auto_update = MessageBoxA(NULL, "Do you want to enable auto-updates?", "JojoAPI Updater", MB_YESNO | MB_ICONQUESTION);
+        should_update = auto_update == IDYES;
+
+        updater_config.insert_or_assign("autoupdate", should_update);
+
+        int should_remove_eac = MessageBoxA(NULL, "Do you want uninstall EAC?", "JojoAPI Updater", MB_YESNO | MB_ICONQUESTION);
+        delete_eac = should_remove_eac == IDYES;
+
+        updater_config.insert_or_assign("delete_eac", delete_eac);
+
+        updater_config.insert_or_assign("first_run", false);
+    }
+
+    should_update = ConfigBind(updater_config, "autoupdate", true);
+    delete_eac = ConfigBind(updater_config, "delete_eac", true);
+    ignore_hashes = ConfigBind(updater_config, "ignore_hashes", false);
+    japi_version_installed = ConfigBind(updater_config, "version", "0.0.0");
+    asbr_hash = ConfigBind(updater_config, "asbr_hash", 0);
+
+    // Save the config
+    updater_config_file << updater_config;
+
+    if(first_run) {
+        // Get the new hash
+        uint16_t new_hash = DownloadASBR();
+
+        if(new_hash == 0) {
+            std::cout << "Failed to download a new ASBR release! Is this hash correct? (" + std::to_string(new_hash) + ")\n";
+            std::cout << "Aborting...\n";
+
+            updater_config.insert_or_assign("first_run", true);
+
+            updater_config_file << updater_config;
+
+            return 1;
+        }
+
+        // Insert the hash into the table
+        updater_config.insert_or_assign("asbr_hash", new_hash);
+
+        DownloadJAPI(GetLatestJAPIVersion());
+        DownloadAdditionalDLLs();
+
+        if(delete_eac) {
+            RemoveEAC();
+        }
+
+        std::cout << "First run complete!\n";
+        LaunchGame();
+
+        // Save the config
+        updater_config_file << updater_config;
+
+        return 0;
+    }
+
+    if(!should_update) {
+        std::cout << "Skipping updating process...\n";
+
+        LaunchGame();
+
+        return 0;
+    }
+
+    std::ifstream asbr_file("ASBR.exe");
+    if(!asbr_file.good()) {
+        std::cout << "ASBR.exe is missing! Is this the right directory? ABORTING\n";
+        return 1;
     }
 
     // Check the ASBR.exe hash
-    std::ifstream asbr_o("ASBR.exe");
-    if(!asbr_o.good()) {
-        // TODO: Install ASBR.exe
-    }
+    uint16_t computed_hash = ComputeCRC16Hash(asbr_file);
 
-    uint16_t computed_hash = ComputeCRC16Hash(asbr_o);
     if(computed_hash != asbr_hash) {
-        std::cout << "ASBR.exe failed the current checksum! Grabbing the executable...\n";
+        std::cout << "ASBR.exe failed the current checksum! Grabbing the new executable...\n";
 
-        // TODO: Install ASBR.exe
+        // Get the new hash
+        uint16_t new_hash = DownloadASBR();
+
+        if(new_hash == 0) {
+            std::cout << "Failed to download a new ASBR release! Is this hash correct? (" + std::to_string(new_hash) + ")\n";
+            std::cout << "Skipping updating process...\n";
+
+            LaunchGame();
+
+            return 0;
+        }
+
+        // Insert the hash into the table
+        updater_config.insert_or_assign("asbr_hash", new_hash);
     }
 
-    // Check the d3dcompiler_47.dll hash
-    std::ifstream d3dcompiler_47("d3dcompiler_47.dll");
-    if(!d3dcompiler_47.good()) {
-        // TODO: Install d3dcompiler_47.dll & d3dcompiler_47_o.dll
+    // Check the JAPI version
+    Version latest_version = GetLatestJAPIVersion();
+
+    if(IsBiggerVersion(latest_version, ParseVersion(japi_version_installed)) && !ignore_hashes) {
+        std::cout << "A new version of JAPI is available! Downloading...\n";
+
+        DownloadJAPI(latest_version);
+        DownloadAdditionalDLLs();
+
+        // Insert the hash into the table
+        updater_config.insert_or_assign("version", VersionString(latest_version));
     }
 
-    computed_hash = ComputeCRC16Hash(d3dcompiler_47);
+    // Save the config
+    updater_config_file << updater_config;
 
-    if(computed_hash != japi_hash) {
-        std::cout << "JAPI failed the current checksum! Grabbing newest release...\n";
-
-        // TODO: Install d3dcompiler_47.dll & d3dcompiler_47_o.dll
-    }
+    LaunchGame();
 
     return 0;
 }

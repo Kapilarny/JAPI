@@ -8,6 +8,8 @@ set(CMAKE_CXX_STANDARD 17)
 # Add the source files
 file(GLOB_RECURSE SOURCES "src/*.cpp")
 
+add_link_options(-static -static-libgcc -static-libstdc++ -Wno-pointer-arith)
+
 # Add the executable
 add_executable(JAPIUpdater ${SOURCES})
 target_include_directories(JAPIUpdater PRIVATE "../external/toml")

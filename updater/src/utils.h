@@ -12,13 +12,15 @@ typedef struct Version {
     uint32_t patch;
 } Version;
 
+void LaunchGame();
+
 inline uint16_t ComputeCRC16Hash(std::ifstream& file) {
     std::vector<uint8_t> buffer(std::istreambuf_iterator<char>(file), {});
     return CRC16::CCITT_FALSE::calc(buffer.data(), buffer.size());
 }
 
-inline void PrintVersion(Version version) {
-    std::cout << version.major << "." << version.minor << "." << version.patch << "\n";
+inline std::string VersionString(Version version) {
+    return std::to_string(version.major) + "." + std::to_string(version.minor) + "." + std::to_string(version.patch);
 }
 
 inline bool IsBiggerVersion(Version a, Version b) {
