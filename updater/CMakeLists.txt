@@ -11,7 +11,7 @@ file(GLOB_RECURSE SOURCES "src/*.cpp")
 add_link_options(-static -static-libgcc -static-libstdc++ -Wno-pointer-arith)
 
 # Add the executable
-add_executable(JAPIUpdater ${SOURCES})
+add_executable(JAPIUpdater ${SOURCES} "app.o")
 target_include_directories(JAPIUpdater PRIVATE "../external/toml")
 
 # add winhttp
