@@ -8,6 +8,8 @@
 
 std::vector<uint8_t> DownloadFile(std::string url);
 
+bool IsUnpackedHash(uint16_t hash);
+
 bool Is404(std::vector<uint8_t>& buffer);
 
 Version GetLatestJAPIVersion();

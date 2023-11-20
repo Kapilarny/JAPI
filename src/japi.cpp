@@ -79,7 +79,7 @@ void JAPI::LoadMods() {
     }
 
     // Load CPK mods
-    LoadCPKMods();
+    // LoadCPKMods();
 
     // Get all files in japi\mods and load them
     for(auto& p : std::filesystem::directory_iterator("japi\\mods")) {
@@ -137,31 +137,4 @@ std::string JAPI::GetModGUID(HANDLE modHandle) {
     }
 
     return "";
-}
-
-HANDLE JAPI::GetASBRProcessHandle() {
-    if(!instance->processHandle) {
-        instance->InitWindowsVars();
-    }
-
-    return instance->processHandle;
-}
-
-void JAPI::InitWindowsVars() {
-    if(!instance->hwnd) {
-        instance->hwnd = FindWindowA(NULL, "Jojo's Bizarre Adventure: All-Star Battle R");
-        if(!instance->hwnd) {
-            Sleep(5);
-            InitWindowsVars(); // This is stupid but it works so idc
-            return;
-        }
-    }
-
-    if(!instance->pid) {
-        GetWindowThreadProcessId(instance->hwnd, &instance->pid);
-    }
-
-    if(!instance->processHandle) {
-        instance->processHandle = OpenProcess(PROCESS_ALL_ACCESS, TRUE, instance->pid);
-    }
 }
