@@ -168,6 +168,12 @@ uint16_t DownloadASBR() {
     // Get the hash
     std::ifstream asbr_orig("ASBR.exe");
     uint16_t hash = ComputeCRC16Hash(asbr_orig);
+
+    if(IsUnpackedHash(hash)) {
+        JINFO("ASBR.exe is already unpacked! Skipping download...");
+        return hash;
+    }
+
     std::string str_hash = std::to_string(hash);
 
     asbr_orig.close();
@@ -259,4 +265,39 @@ void CreateSteamAppID() {
     steam_appid.close();
 
     JINFO("Created steam_appid.txt");
+}
+
+bool IsUnpackedHash(uint16_t hash) {
+    std::vector<uint8_t> buffer = DownloadFile("raw.githubusercontent.com/Kapilarny/JAPI/files/unpacked_hashes.txt");
+
+    if(buffer.empty()) {
+        JERROR("Failed to download the unpacked hashes! Is the internet down?");
+        return false;
+    }
+
+    std::string hashes_str(buffer.begin(), buffer.end());
+
+    // Split the string by newlines
+    std::vector<std::string> hashes;
+    std::string::iterator it = hashes_str.begin();
+    std::string::iterator end = hashes_str.end();
+
+    std::string hash_str;
+    for(; it != end; it++) {
+        if(*it == '\n') {
+            hashes.push_back(hash_str);
+            hash_str.clear();
+            continue;
+        }
+
+        hash_str += *it;
+    }
+
+    for(std::string& str : hashes) {
+        if(str == std::to_string(hash)) {
+            return true;
+        }
+    }
+
+    return false;
 }

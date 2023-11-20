@@ -39,9 +39,7 @@ Version GetLatestUpdaterVersion() {
 }
 
 bool Is404(std::vector<uint8_t>& buffer) {
-    std::string str(buffer.begin(), buffer.end());
-
-    return str.find("404: Not Found") != std::string::npos;
+    return buffer.size() == 15; // This is so fucking stupid i love this
 }
 
 std::vector<uint8_t> DownloadFile(std::string url) {
