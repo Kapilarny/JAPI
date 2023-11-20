@@ -11,11 +11,6 @@ static bool shouldLogToConsole = false;
 
 void SetShouldLogToConsole(bool shouldLog) {
     shouldLogToConsole = shouldLog;
-
-    if(shouldLogToConsole) {
-        AllocConsole();
-        freopen_s((FILE**)stdout, "CONOUT$", "w", stdout);
-    }
 }
 
 void LogOutput(LogLevel level, const std::string& message, const std::string& pluginGUID) {
@@ -26,7 +21,7 @@ void LogOutput(LogLevel level, const std::string& message, const std::string& pl
     std::string finalMessage = "[" + pluginGUID + "] " + level_strings[level] + message + "\n";
 
     if (!logFile.is_open()) {
-        logFile.open("JAPIUpdater_preload.log", std::ios::out | std::ios::trunc);
+        logFile.open("JAPIUpdater.log", std::ios::out | std::ios::trunc);
     }
 
     // Write to log file

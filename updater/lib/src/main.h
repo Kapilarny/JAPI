@@ -1,15 +1,22 @@
 #pragma once
 
-#include <vector>
-#include <iostream>
-#include <fstream>
 #include <stdint.h>
+#include <string>
+
+#define JEXP extern "C" __declspec(dllexport)
+
+#define JAPI_UPDATER_MAJOR 1
+#define JAPI_UPDATER_MINOR 1
+#define JAPI_UPDATER_PATCH 0
 
 typedef struct Version {
     uint32_t major;
     uint32_t minor;
     uint32_t patch;
 } Version;
+
+JEXP Version GetUpdaterVersion();
+JEXP void LaunchUpdater();
 
 inline std::string VersionString(Version version) {
     return std::to_string(version.major) + "." + std::to_string(version.minor) + "." + std::to_string(version.patch);

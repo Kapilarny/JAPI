@@ -6,48 +6,36 @@
 
 #include "logger.h"
 
-Version GetLatestJAPIVersion() {
-    std::vector<uint8_t> buffer = DownloadFile("raw.githubusercontent.com/Kapilarny/JAPI/master/version.txt");
+void DownloadUpdater(Version version) {
+    std::vector<uint8_t> buffer = DownloadFile("raw.githubusercontent.com/Kapilarny/JAPI/files/updater/" + VersionString(version) + ".dll");
 
     if(buffer.empty()) {
-        JERROR("Failed to download get the latest JAPI version! Is the internet down?");
+        JERROR("Failed to download the latest updater! Is the internet down?");
+        return;
+    }
+
+    // Overwrite the old updater
+    std::ofstream out("JAPIUpdaterLib.dll", std::ios::binary | std::ios::out | std::ios::trunc);
+    out.write((char*)buffer.data(), buffer.size());
+    out.close();
+
+    JINFO("Downloaded the latest updater!");
+}
+
+Version GetLatestUpdaterVersion() {
+    std::vector<uint8_t> buffer = DownloadFile("raw.githubusercontent.com/Kapilarny/JAPI/master/updater_version.txt");
+
+    if(buffer.empty()) {
+        JERROR("Failed to download get the latest updater version! Is the internet down?");
+
         return {0, 0, 0};
     }
 
     std::string version_str(buffer.begin(), buffer.end());
 
-    JINFO("Latest JAPI version: " + version_str);
+    JINFO("Latest updater version: " + version_str);
 
     return ParseVersion(version_str);
-}
-
-std::vector<std::string> GetLatestJAPIDlls() {
-    std::vector<uint8_t> buffer = DownloadFile("raw.githubusercontent.com/Kapilarny/JAPI/master/dlls.txt");
-
-    if(buffer.empty()) {
-        JERROR("Failed to download the latest JAPI dlls! Is the internet down?");
-        return {};
-    }
-
-    std::string dlls_str(buffer.begin(), buffer.end());
-
-    // Split the string by newlines
-    std::vector<std::string> dlls;
-    std::string::iterator it = dlls_str.begin();
-    std::string::iterator end = dlls_str.end();
-
-    std::string dll;
-    for(; it != end; it++) {
-        if(*it == '\n') {
-            dlls.push_back(dll);
-            dll.clear();
-            continue;
-        }
-
-        dll += *it;
-    }
-
-    return dlls;
 }
 
 bool Is404(std::vector<uint8_t>& buffer) {
@@ -162,101 +150,4 @@ std::vector<uint8_t> DownloadFile(std::string url) {
     }
 
     return buffer;
-}
-
-uint16_t DownloadASBR() {
-    // Get the hash
-    std::ifstream asbr_orig("ASBR.exe");
-    uint16_t hash = ComputeCRC16Hash(asbr_orig);
-    std::string str_hash = std::to_string(hash);
-
-    asbr_orig.close();
-
-    // Rename the original ASBR.exe
-    if(std::filesystem::exists("ASBR.exe")) {
-        std::filesystem::rename("ASBR.exe", "ASBR_orig.exe");
-    }
-
-    // Grab the file
-    std::vector<uint8_t> buffer = DownloadFile("raw.githubusercontent.com/Kapilarny/JAPI/files/asbr/" + str_hash + ".exe");
-
-    if(buffer.empty()) {
-        JFATAL("Failed to download ASBR! Is this hash correct? (" + str_hash + ") ABORTING");
-
-        exit(1);
-
-        return -1;
-    }
-
-    // Overwrite the current ASBR.exe
-    std::ofstream asbr("ASBR.exe", std::ios::out | std::ios::trunc | std::ios::binary);
-    asbr.write((char*)buffer.data(), buffer.size());
-    asbr.close();
-
-    // Create a new hash
-    std::ifstream asbr_file("ASBR.exe");
-    if(!asbr_file.good()) {
-        JFATAL("Failed to open the new ASBR.exe to calculate the hash! ABORTING\n");
-
-        exit(1);
-
-        return -1;
-    }
-
-    uint16_t new_hash = ComputeCRC16Hash(asbr_file);
-
-    JINFO("ASBR.exe updated!");
-
-    return new_hash;
-}
-
-void DownloadAdditionalDLLs() {
-    std::vector<std::string> dlls = GetLatestJAPIDlls();
-
-    for(std::string dll : dlls) {
-        std::vector<uint8_t> buffer = DownloadFile("raw.githubusercontent.com/Kapilarny/JAPI/files/dlls/" + dll);
-
-        if(buffer.empty()) {
-            JFATAL("Failed to download " + dll + "! No internet?");
-            continue;
-        }
-
-        // Overwrite the current dll
-        std::ofstream dll_file(dll, std::ios::out | std::ios::trunc | std::ios::binary);
-        dll_file.write((char*)buffer.data(), buffer.size());
-        dll_file.close();
-
-        JINFO(dll + " updated!");
-    }
-}
-
-void DownloadJAPI(Version version) {
-    // If d3dcompiler_47_o.dll doesnt exists, rename d3dcompiler_47.dll to it
-    if(!std::filesystem::exists("d3dcompiler_47_o.dll")) {
-        std::filesystem::rename("d3dcompiler_47.dll", "d3dcompiler_47_o.dll");
-    }
-
-    // Grab the file
-    std::vector<uint8_t> buffer = DownloadFile("raw.githubusercontent.com/Kapilarny/JAPI/files/japi/" + VersionString(version) + ".dll");
-
-    if(buffer.empty()) {
-        JFATAL("Failed to download JAPI! Is this version correct? (" + VersionString(version) + ")");
-        return;
-    }
-
-    // Overwrite the current d3dcompiler_47.dll
-    std::ofstream d3dcompiler_47("d3dcompiler_47.dll", std::ios::out | std::ios::trunc | std::ios::binary);
-    d3dcompiler_47.write((char*)buffer.data(), buffer.size());
-    d3dcompiler_47.close();
-
-    JINFO("JAPI updated!");
-}
-
-void CreateSteamAppID() {
-    // Create steam_appid.txt
-    std::ofstream steam_appid("steam_appid.txt", std::ios::out | std::ios::trunc);
-    steam_appid << "1372110";
-    steam_appid.close();
-
-    JINFO("Created steam_appid.txt");
 }
