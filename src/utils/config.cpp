@@ -1,14 +1,19 @@
 #include "config.h"
 
 #include <filesystem>
+#include <iostream>
 
 ModConfig GetModConfig(std::string modGUID) {
     ModConfig config;
 
     config.filePath = "japi/config/" + modGUID + ".cfg";
-    
-    if(!std::filesystem::exists("japi/config")) {
-        std::filesystem::create_directory("japi/config");
+
+    if(!std::filesystem::exists("japi")) {
+        std::filesystem::create_directory("japi");
+    }
+
+    if(!std::filesystem::exists("japi\\config")) {
+        std::filesystem::create_directories("japi\\config");
     }
 
     // Check if the file exists
@@ -16,7 +21,7 @@ ModConfig GetModConfig(std::string modGUID) {
         config.table = toml::table();
         return config;
     }
-    
+
     config.table = toml::parse_file(config.filePath);
 
     return config;

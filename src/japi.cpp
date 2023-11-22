@@ -79,7 +79,7 @@ void JAPI::LoadMods() {
     }
 
     // Load CPK mods
-    LoadCPKMods();
+    // LoadCPKMods();
 
     // Get all files in japi\mods and load them
     for(auto& p : std::filesystem::directory_iterator("japi\\mods")) {
