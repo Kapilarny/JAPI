@@ -38,4 +38,5 @@ Thanks to these, JojoAPI is possible:
 - [lua](https://lua.org) - A powerful, fast, lightweight, embeddable scripting language
 - [sol2](https://github.com/ThePhD/sol2) - A C++ library binding to Lua
 - [toml++](https://github.com/marzer/tomlplusplus) - Header-only TOML config file parser and serializer for C++17
+- [nlohmann/json](https://github.com/nlohmann/json) - Header-only JSON library
 - A lot of coffee
