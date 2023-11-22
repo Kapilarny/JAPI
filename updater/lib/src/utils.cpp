@@ -20,7 +20,7 @@ void LaunchGame() {
     GetCurrentDirectoryA(MAX_PATH, current_directory);
 
     // Append the ASBR.exe path
-    std::string str = "\\" + gameData.game_file;
+    std::string str = "\\" + GetGameData().game_file;
     strcat(current_directory, str.c_str());
 
     JINFO(current_directory);

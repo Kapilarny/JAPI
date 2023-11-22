@@ -4,6 +4,7 @@
 #include <stdint.h>
 
 enum class GameType {
+    NONE = -1,
     ASBR = 0,
     CONNECTIONS = 1
 };
@@ -16,4 +17,4 @@ typedef struct GameData {
     std::string steam_appid;
 } GameData;
 
-static inline GameData gameData = GameData();
+GameData& GetGameData();
