@@ -5,6 +5,7 @@
 #include <winhttp.h>
 
 #include "logger.h"
+#include "game_type.h"
 
 Version GetLatestJAPIVersion() {
     std::vector<uint8_t> buffer = DownloadFile("raw.githubusercontent.com/Kapilarny/JAPI/master/version.txt");
@@ -261,7 +262,7 @@ void DownloadJAPI(Version version) {
 void CreateSteamAppID() {
     // Create steam_appid.txt
     std::ofstream steam_appid("steam_appid.txt", std::ios::out | std::ios::trunc);
-    steam_appid << "1372110";
+    steam_appid << GetGameData().steam_appid;
     steam_appid.close();
 
     JINFO("Created steam_appid.txt");

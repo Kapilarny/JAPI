@@ -9,7 +9,7 @@
 #include "utils.h"
 #include "logger.h"
 
-#include "updater.h"
+#include "game_type.h"
 
 void SaveConfig(toml::table& config) {
     std::ofstream config_file("japi/config/updater.cfg", std::ios::out | std::ios::trunc);
@@ -17,6 +17,11 @@ void SaveConfig(toml::table& config) {
 }
 
 int UpdaterMain() {
+    if(GetGameData().game_type == GameType::NONE) {
+        JFATAL("Could not detect game type");
+        return 1;
+    }
+
     // Check if japi/ exists
     if (!std::filesystem::exists("japi")) {
         std::filesystem::create_directory("japi");

@@ -4,6 +4,7 @@
 #include <stdio.h>
 
 #include "logger.h"
+#include "game_type.h"
 
 void LaunchGame() {
     // Run ASBR.exe
@@ -19,7 +20,8 @@ void LaunchGame() {
     GetCurrentDirectoryA(MAX_PATH, current_directory);
 
     // Append the ASBR.exe path
-    strcat(current_directory, "\\ASBR.exe");
+    std::string str = "\\" + GetGameData().game_file;
+    strcat(current_directory, str.c_str());
 
     JINFO(current_directory);
 
