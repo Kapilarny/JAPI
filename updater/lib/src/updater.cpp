@@ -118,7 +118,7 @@ int UpdaterMain() {
 
         return 0;
     }
- 
+
     // Check the JAPI version
     Version latest_version = GetLatestJAPIVersion();
 
