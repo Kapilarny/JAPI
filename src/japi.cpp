@@ -30,6 +30,9 @@ void JAPI::Init(HINSTANCE hinstDLL) {
         freopen_s(&file, "CONIN$", "r", stdin);
     }
 
+    // Load GameData
+    instance->gameData = GameData();
+
     if(MH_Initialize() != MH_OK) {
         JERROR("Failed to initialize MinHook!");
         return;
@@ -137,4 +140,8 @@ std::string JAPI::GetModGUID(HANDLE modHandle) {
     }
 
     return "";
+}
+
+GameData& JAPI::GetGameData() {
+    return instance->gameData;
 }

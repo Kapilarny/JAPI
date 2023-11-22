@@ -26,7 +26,7 @@ __int64 __fastcall sub_645828_Hook(unsigned __int64 a1, unsigned __int64 a2)
 {
     auto result = sub_645828_Original(a1, a2);
     
-    auto loadCpk = (__int64(__fastcall*)(__int64 a, __int64 b))(JAPI::GetASBRModuleBase() + 0x6533c8);
+    auto loadCpk = (__int64(__fastcall*)(__int64 a, __int64 b))(JAPI::GetASBRModuleBase() + JAPI::GetGameData().functions.CPKLoadFunc);
 
     for(auto& cpk : cpks) {
         // Change all backslashes to forward slashes
@@ -107,7 +107,7 @@ void LoadCPKMods() {
     }
     // Hook the CPK loading function
     Hook hook = {
-        (void*) 0x65a888,
+        (void*) JAPI::GetGameData().functions.CPKPreloadFunc,
         (void*) &sub_645828_Hook,
         (void**) &sub_645828_Original,
         "sub_645828"

@@ -10,9 +10,6 @@ set(CMAKE_SHARED_LIBRARY_PREFIX "")
 set(CMAKE_STATIC_LIBRARY_PREFIX "")
 
 add_subdirectory(external/minhook)
-
-set(ASMJIT_STATIC TRUE)
-set(ASMTK_STATIC TRUE)
 add_subdirectory(external/asmtk)
 
 add_subdirectory(updater)
@@ -29,6 +26,6 @@ target_link_libraries(d3dcompiler_47 PRIVATE
     winpthread
     minhook 
     "${CMAKE_CURRENT_SOURCE_DIR}/external/lua/bin/lua54.dll"
-    asmjit
-    asmtk
+    "${CMAKE_CURRENT_SOURCE_DIR}/external/built/asmjit.dll"
+    "${CMAKE_CURRENT_SOURCE_DIR}/external/built/asmtk.dll"
 )

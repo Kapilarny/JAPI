@@ -27,6 +27,8 @@ int UpdaterMain() {
         std::filesystem::create_directory("japi/config");
     }
 
+    bool is_connections = std::filesystem::exists("NSUNSC.exe");
+
     toml::table updater_config;
     bool should_update = false;
     bool ignore_hashes = false;
@@ -71,22 +73,24 @@ int UpdaterMain() {
         // Create the steam_appid.txt file
         CreateSteamAppID();
 
-        // Get the new hash
-        uint16_t new_hash = DownloadASBR();
+        if(!is_connections) {
+            // Get the new hash
+            uint16_t new_hash = DownloadASBR();
 
-        if(new_hash == 0) {
-            JFATAL("Failed to download a new ASBR release! Is this hash correct? (" + std::to_string(new_hash) + ")");
-            JFATAL("Aborting...");
+            if(new_hash == 0) {
+                JFATAL("Failed to download a new ASBR release! Is this hash correct? (" + std::to_string(new_hash) + ")");
+                JFATAL("Aborting...");
 
-            updater_config.insert_or_assign("first_run", true);
+                updater_config.insert_or_assign("first_run", true);
 
-            SaveConfig(updater_config);
+                SaveConfig(updater_config);
 
-            return 1;
+                return 1;
+            }
+
+            // Insert the hash into the table
+            updater_config.insert_or_assign("asbr_hash", new_hash);
         }
-
-        // Insert the hash into the table
-        updater_config.insert_or_assign("asbr_hash", new_hash);
 
         DownloadJAPI(GetLatestJAPIVersion());
         DownloadAdditionalDLLs();
@@ -109,35 +113,7 @@ int UpdaterMain() {
 
         return 0;
     }
-
-    std::ifstream asbr_file("ASBR.exe");
-    if(!asbr_file.good()) {
-        JFATAL("ASBR.exe is missing! Is this the right directory? ABORTING");
-        return 1;
-    }
-
-    // Check the ASBR.exe hash
-    uint16_t computed_hash = ComputeCRC16Hash(asbr_file);
-
-    if(computed_hash != asbr_hash && !ignore_hashes) {
-        JDEBUG("ASBR.exe failed the current checksum! Grabbing the new executable...");
-
-        // Get the new hash
-        uint16_t new_hash = DownloadASBR();
-
-        if(new_hash == 0) {
-            JERROR("Failed to download a new ASBR release! Is this hash correct? (" + std::to_string(new_hash) + ")");
-            JERROR("Skipping updating process...");
-
-            LaunchGame();
-
-            return 0;
-        }
-
-        // Insert the hash into the table
-        updater_config.insert_or_assign("asbr_hash", new_hash);
-    }
-
+ 
     // Check the JAPI version
     Version latest_version = GetLatestJAPIVersion();
 
@@ -149,6 +125,36 @@ int UpdaterMain() {
 
         // Insert the hash into the table
         updater_config.insert_or_assign("version", VersionString(latest_version));
+    }
+
+    if(!is_connections) {
+        std::ifstream asbr_file("ASBR.exe");
+        if(!asbr_file.good()) {
+            JFATAL("ASBR.exe is missing! Is this the right directory? ABORTING");
+            return 1;
+        }
+
+        // Check the ASBR.exe hash
+        uint16_t computed_hash = ComputeCRC16Hash(asbr_file);
+
+        if(computed_hash != asbr_hash && !ignore_hashes) {
+            JDEBUG("ASBR.exe failed the current checksum! Grabbing the new executable...");
+
+            // Get the new hash
+            uint16_t new_hash = DownloadASBR();
+
+            if(new_hash == 0) {
+                JERROR("Failed to download a new ASBR release! Is this hash correct? (" + std::to_string(new_hash) + ")");
+                JERROR("Skipping updating process...");
+
+                LaunchGame();
+
+                return 0;
+            }
+
+            // Insert the hash into the table
+            updater_config.insert_or_assign("asbr_hash", new_hash);
+        }
     }
 
     // Save the config
