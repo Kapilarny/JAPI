@@ -10,7 +10,7 @@ set(CMAKE_SHARED_LIBRARY_PREFIX "")
 set(CMAKE_STATIC_LIBRARY_PREFIX "")
 
 add_subdirectory(external/minhook)
-add_subdirectory(external/asmtk)
+# add_subdirectory(external/asmtk)
 
 add_subdirectory(updater)
 
