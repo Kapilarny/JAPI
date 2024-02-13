@@ -7,8 +7,8 @@ GameData::GameData() {
     if(std::filesystem::exists("ASBR.exe")) {
         this->game_type = GameType::ASBR;
         
-        this->functions.CPKPreloadFunc = 0x56C5D0;
-        this->functions.CPKLoadFunc = 0x661FD8;
+        this->functions.CPKPreloadFunc = 0x56C970;
+        this->functions.CPKLoadFunc = 0x662378;
     } else if(std::filesystem::exists("NSUNSC.exe")) {
         this->game_type = GameType::CONNECTIONS;
 
