@@ -141,6 +141,7 @@ int UpdaterMain() {
 
         // Check the ASBR.exe hash
         uint16_t computed_hash = ComputeCRC16Hash(asbr_file);
+        JDEBUG("Computed hash: " + std::to_string(computed_hash));
 
         if(computed_hash != asbr_hash && !ignore_hashes) {
             JDEBUG("ASBR.exe failed the current checksum! Grabbing the new executable...");
