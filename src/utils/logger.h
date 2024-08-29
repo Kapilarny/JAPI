@@ -1,6 +1,7 @@
 #pragma once
 
 #include <string>
+#include <stdarg.h>
 #include <memory>
 
 #define LOG_WARN_ENABLED 1
@@ -17,47 +18,48 @@ typedef enum LogLevel {
     LOG_LEVEL_TRACE = 5
 } LogLevel;
 
-void LogOutput(LogLevel level, const std::string& message, const std::string& pluginGUID);
+void LogOutputWithFmt(LogLevel level, const std::string& message, const std::string& pluginGUID, ...);
+void LogOutputVaList(LogLevel level, const std::string& message, const std::string& pluginGUID, va_list args);
 
-#define JFATAL(message) LogOutput(LOG_LEVEL_FATAL, message, "JojoAPI");
-#define JERROR(message) LogOutput(LOG_LEVEL_ERROR, message, "JojoAPI");
-#define JWARN(message) LogOutput(LOG_LEVEL_WARN, message, "JojoAPI");
-#define JINFO(message) LogOutput(LOG_LEVEL_INFO, message, "JojoAPI");
-#define JDEBUG(message) LogOutput(LOG_LEVEL_DEBUG, message, "JojoAPI");
-#define JTRACE(message) LogOutput(LOG_LEVEL_TRACE, message, "JojoAPI");
+#define JFATAL(message, ...) LogOutputWithFmt(LOG_LEVEL_FATAL, message, "JojoAPI", ##__VA_ARGS__);
+#define JERROR(message, ...) LogOutputWithFmt(LOG_LEVEL_ERROR, message, "JojoAPI", ##__VA_ARGS__);
+#define JWARN(message, ...) LogOutputWithFmt(LOG_LEVEL_WARN, message, "JojoAPI", ##__VA_ARGS__);
+#define JINFO(message, ...) LogOutputWithFmt(LOG_LEVEL_INFO, message, "JojoAPI", ##__VA_ARGS__);
+#define JDEBUG(message, ...) LogOutputWithFmt(LOG_LEVEL_DEBUG, message, "JojoAPI", ##__VA_ARGS__);
+#define JTRACE(message, ...) LogOutputWithFmt(LOG_LEVEL_TRACE, message, "JojoAPI", ##__VA_ARGS__);
 
-#define LOG_FATAL(pluginGUID, message) LogOutput(LOG_LEVEL_FATAL, message, pluginGUID);
+#define LOG_FATAL(pluginGUID, message, ...) LogOutputWithFmt(LOG_LEVEL_FATAL, message, pluginGUID, ##__VA_ARGS__);
 
-#define LOG_ERROR(pluginGUID, message) LogOutput(LOG_LEVEL_ERROR, message, pluginGUID);
+#define LOG_ERROR(pluginGUID, message, ...) LogOutputWithFmt(LOG_LEVEL_ERROR, message, pluginGUID, ##__VA_ARGS__);
 
 #if LOG_WARN_ENABLED == 1
 // Logs a warning-level message
-#define LOG_WARN(pluginGUID, message) LogOutput(LOG_LEVEL_WARN, message, pluginGUID);
+#define LOG_WARN(pluginGUID, message, ...) LogOutputWithFmt(LOG_LEVEL_WARN, message, pluginGUID, ##__VA_ARGS__);
 #else
 // Does nothing when LOG_WARN_ENABLED != 1
-#define LOG_WARN(pluginGUID, message)
+#define LOG_WARN(pluginGUID, message, ...)
 #endif
 
 #if LOG_INFO_ENABLED == 1
 // Logs a info-level message
-#define LOG_INFO(pluginGUID, message) LogOutput(LOG_LEVEL_INFO, message, pluginGUID);
+#define LOG_INFO(pluginGUID, message, ...) LogOutputWithFmt(LOG_LEVEL_INFO, message, pluginGUID, ##__VA_ARGS__);
 #else
 // Does nothing when LOG_INFO_ENABLED != 1
-#define LOG_INFO(pluginGUID, message)
+#define LOG_INFO(pluginGUID, message, ...)
 #endif
 
 #if LOG_DEBUG_ENABLED == 1
 // Logs a info-level message
-#define LOG_DEBUG(pluginGUID, message) LogOutput(LOG_LEVEL_DEBUG, message, pluginGUID);
+#define LOG_DEBUG(pluginGUID, message, ...) LogOutputWithFmt(LOG_LEVEL_DEBUG, message, pluginGUID, ##__VA_ARGS__);
 #else
 // Does nothing when LOG_DEBUG_ENABLED != 1
-#define LOG_DEBUG(pluginGUID, message)
+#define LOG_DEBUG(pluginGUID, message, ...)
 #endif
 
 #if LOG_TRACE_ENABLED == 1
 // Logs a info-level message
-#define LOG_TRACE(pluginGUID, message) LogOutput(LOG_LEVEL_TRACE, message, pluginGUID);
+#define LOG_TRACE(pluginGUID, message, ...) LogOutputWithFmt(LOG_LEVEL_TRACE, message, pluginGUID, ##__VA_ARGS__);
 #else
 // Does nothing when LOG_TRACE_ENABLED != 1
-#define LOG_TRACE(pluginGUID, message)
+#define LOG_TRACE(pluginGUID, message, ...)
 #endif

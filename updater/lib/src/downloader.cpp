@@ -170,6 +170,8 @@ uint16_t DownloadASBR() {
     std::ifstream asbr_orig("ASBR.exe");
     uint16_t hash = ComputeCRC16Hash(asbr_orig);
 
+    JTRACE("Checking if ASBR.exe is already unpacked...");
+
     if(IsUnpackedHash(hash)) {
         JINFO("ASBR.exe is already unpacked! Skipping download...");
         return hash;
@@ -179,13 +181,16 @@ uint16_t DownloadASBR() {
 
     asbr_orig.close();
 
-    // Rename the original ASBR.exe
-    if(std::filesystem::exists("ASBR.exe")) {
-        std::filesystem::rename("ASBR.exe", "ASBR_orig.exe");
-    }
+    JTRACE("ASBR.exe is not unpacked! Downloading the new executable...");
+    JTRACE("Hash: " + str_hash);
+
+    // 27687
+
+    JTRACE("Renamed the original ASBR.exe to ASBR_orig.exe");
 
     // Grab the file
-    std::vector<uint8_t> buffer = DownloadFile("raw.githubusercontent.com/Kapilarny/JAPI/files/asbr/" + str_hash + ".exe");
+    std::vector<uint8_t> buffer = DownloadFile("raw.githubusercontent.com/Kapilarny/JAPI/files/asbr/" + str_hash);
+    // std::vector<uint8_t> buffer = DownloadFile("raw.githubusercontent.com/Kapilarny/JAPI/files/unpacked_hashes.txt");
 
     if(buffer.empty()) {
         JFATAL("Failed to download ASBR! Is this hash correct? (" + str_hash + ") ABORTING");
@@ -193,6 +198,11 @@ uint16_t DownloadASBR() {
         exit(1);
 
         return -1;
+    }
+
+    // Rename the original ASBR.exe
+    if(std::filesystem::exists("ASBR.exe")) {
+        std::filesystem::rename("ASBR.exe", "ASBR_orig.exe");
     }
 
     // Overwrite the current ASBR.exe
@@ -294,7 +304,12 @@ bool IsUnpackedHash(uint16_t hash) {
         hash_str += *it;
     }
 
+    if(!hash_str.empty()) {
+        hashes.push_back(hash_str);
+    }
+
     for(std::string& str : hashes) {
+        JTRACE("Checking hash: " + str);
         if(str == std::to_string(hash)) {
             return true;
         }

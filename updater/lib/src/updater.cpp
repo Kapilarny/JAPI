@@ -159,6 +159,7 @@ int UpdaterMain() {
             }
 
             // Insert the hash into the table
+            JDEBUG("New hash: " + std::to_string(new_hash));
             updater_config.insert_or_assign("asbr_hash", new_hash);
         }
     }

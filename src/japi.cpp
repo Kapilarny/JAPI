@@ -11,7 +11,7 @@
 #include "utils/cpk.h"
 #include "exports/JojoAPI.h"
 #include "lua/script.h"
-#include "lua/asm.h"
+// #include "lua/asm.h"
 
 void JAPI::Init(HINSTANCE hinstDLL) {
     instance = std::unique_ptr<JAPI>(new JAPI());
@@ -69,42 +69,62 @@ void JAPI::LoadMods() {
         std::filesystem::create_directory("japi");
     }
 
-    if(!std::filesystem::exists("japi\\mods")) {
-        std::filesystem::create_directory("japi\\mods");
+    if(!std::filesystem::exists("japi\\dll-plugins")) {
+        std::filesystem::create_directory("japi\\dll-plugins");
     }
 
-    if(!std::filesystem::exists("japi\\luamods")) {
-        std::filesystem::create_directory("japi\\luamods");
+    if(!std::filesystem::exists("japi\\lua-plugins")) {
+        std::filesystem::create_directory("japi\\lua-plugins");
     }
 
     if(!std::filesystem::exists("japi\\cpks")) {
         std::filesystem::create_directory("japi\\cpks");
     }
 
+    if(std::filesystem::exists("japi\\mods")) {
+        for(auto& p : std::filesystem::directory_iterator("japi\\mods")) {
+            if(p.path().extension() == ".dll") {
+                LOG_WARN("PluginLoader", "Please move your plugins from japi\\mods to japi\\dll-plugins!");
+                LOG_WARN("PluginLoader", "This error message will be removed in a future version!");
+                break;
+            }
+        }
+    }
+
+    if(std::filesystem::exists("japi\\luamods")) {
+        for(auto& p : std::filesystem::directory_iterator("japi\\luamods")) {
+            if(p.path().extension() == ".lua") {
+                LOG_WARN("PluginLoader", "Please move your plugins from japi\\luamods to japi\\lua-plugins!");
+                LOG_WARN("PluginLoader", "This error message will be removed in a future version!");
+                break;
+            }
+        }
+    }
+
     // Load CPK mods
     LoadCPKMods();
 
     // Get all files in japi\mods and load them
-    for(auto& p : std::filesystem::directory_iterator("japi\\mods")) {
+    for(auto& p : std::filesystem::directory_iterator("japi\\dll-plugins")) {
         if(p.path().extension() == ".dll") {
             // Load the DLL
             auto handle = LoadLibrary(p.path().string().c_str());
             if(!handle) {
-                LOG_ERROR("ModLoader", "Failed to load mod " + p.path().string());
+                LOG_ERROR("PluginLoader", "Failed to load plugin " + p.path().string());
                 continue;
             }
 
             // Get the mod info
             auto getModInfo = (ModMeta (*)()) GetProcAddress(handle, "GetModInfo");
             if(!getModInfo) {
-                LOG_ERROR("ModLoader", "Failed to get mod info for " + p.path().string());
+                LOG_ERROR("PluginLoader", "Failed to get plugin info for " + p.path().string());
                 continue;
             }
 
             ModMeta modInfo = getModInfo();
             auto modInit = (void (*)()) GetProcAddress(handle, "ModInit");
             if(!modInit) {
-                LOG_ERROR("ModLoader", "Failed to get mod init for " + p.path().string());
+                LOG_ERROR("PluginLoader", "Failed to get plugin init for " + p.path().string());
                 continue;
             }
 
@@ -115,7 +135,7 @@ void JAPI::LoadMods() {
     }
 
     // Get all files in japi\luamods and load them
-    for(auto& p : std::filesystem::directory_iterator("japi\\luamods")) {
+    for(auto& p : std::filesystem::directory_iterator("japi\\lua-plugins")) {
         // Get mod filename
         std::string name = p.path().filename().string();
 
@@ -124,12 +144,12 @@ void JAPI::LoadMods() {
         }
 
         if(p.path().extension() == ".lua") {
-            LOG_INFO("ModLoader", "Loading Lua mod " + p.path().string());
+            LOG_INFO("PluginLoader", "Loading Lua plugin " + p.path().string());
             ScriptManager::AddFileToWatch(p.path().string());
         }
     }
 
-    LOG_INFO("ModLoader", "Loaded " + std::to_string(mods.size()) + " mods!");
+    LOG_INFO("PluginLoader", "Loaded " + std::to_string(mods.size()) + " plugins!");
 }
 
 std::string JAPI::GetModGUID(HANDLE modHandle) {

@@ -10,7 +10,7 @@
 #include "utils/mem.h"
 #include "utils/hooks.h"
 
-#include "lua/asm.h"
+// #include "lua/asm.h"
 
 const char* GetModGUID(void* retAddr) {
     HMODULE hModule = NULL;
@@ -25,11 +25,11 @@ const char* GetModGUID(void* retAddr) {
     return getModInfo().guid;
 }
 
-JEXP __int64 JAPI_GetASBRModuleBase() {
+__int64 JAPI_GetASBRModuleBase() {
     return JAPI::GetASBRModuleBase();
 }
 
-JEXP __int64 JAPI_FindSignature(const char* signature, const char* mask) {
+__int64 JAPI_FindSignature(const char* signature, const char* mask) {
     return (__int64)FindSignature((char*)JAPI::GetASBRModuleBase(), JAPI::GetASBRModuleSize(), signature, mask);
 }
 
@@ -49,9 +49,13 @@ void JAPI_CopyMem(void* dest, void* src, size_t size) {
     memcpy((BYTE*)dest, (BYTE*)src, size);
 }
 
-void JAPI_ExecuteASMCode(std::string code) {
-    ExecuteASMCode(code);
+std::string JAPI_GetPluginReservedDir() {
+    return "japi\\dll-plugins" + std::string(GetModGUID(__builtin_extract_return_addr(__builtin_return_address(0))));
 }
+
+// void JAPI_ExecuteASMCode(std::string code) {
+//     ExecuteASMCode(code);
+// }
 
 bool JAPI_HookFunction(Hook* hook) {
     return HookFunction(hook);
@@ -71,28 +75,58 @@ bool JAPI_UnhookASBRFunction(Hook* hook) {
     return UnhookFunction(hook);
 }
 
-void JAPI_LogFatal(std::string message) {
-    LOG_FATAL(GetModGUID(__builtin_extract_return_addr(__builtin_return_address(0))), message);
+void JAPI_LogFatal(std::string message, ...) {
+    va_list args;
+    va_start(args, message);
+
+    LogOutputVaList(LOG_LEVEL_FATAL, message, GetModGUID(__builtin_extract_return_addr(__builtin_return_address(0))), args);
+
+    va_end(args);
 }
 
-void JAPI_LogError(std::string message) {
-    LOG_ERROR(GetModGUID(__builtin_extract_return_addr(__builtin_return_address(0))), message);
+void JAPI_LogError(std::string message, ...) {
+    va_list args;
+    va_start(args, message);
+
+    LogOutputVaList(LOG_LEVEL_ERROR, message, GetModGUID(__builtin_extract_return_addr(__builtin_return_address(0))), args);
+
+    va_end(args);
 }
 
-void JAPI_LogWarn(std::string message) {
-    LOG_WARN(GetModGUID(__builtin_extract_return_addr(__builtin_return_address(0))), message);
+void JAPI_LogWarn(std::string message, ...) {
+    va_list args;
+    va_start(args, message);
+
+    LogOutputVaList(LOG_LEVEL_WARN, message, GetModGUID(__builtin_extract_return_addr(__builtin_return_address(0))), args);
+
+    va_end(args);
 }
 
-void JAPI_LogInfo(std::string message) {
-    LOG_INFO(GetModGUID(__builtin_extract_return_addr(__builtin_return_address(0))), message);
+void JAPI_LogInfo(std::string message, ...) {
+    va_list args;
+    va_start(args, message);
+
+    LogOutputVaList(LOG_LEVEL_INFO, message, GetModGUID(__builtin_extract_return_addr(__builtin_return_address(0))), args);
+
+    va_end(args);
 }
 
-void JAPI_LogDebug(std::string message) {
-    LOG_DEBUG(GetModGUID(__builtin_extract_return_addr(__builtin_return_address(0))), message);
+void JAPI_LogDebug(std::string message, ...) {
+    va_list args;
+    va_start(args, message);
+
+    LogOutputVaList(LOG_LEVEL_DEBUG, message, GetModGUID(__builtin_extract_return_addr(__builtin_return_address(0))), args);
+
+    va_end(args);
 }
 
-void JAPI_LogTrace(std::string message) {
-    LOG_TRACE(GetModGUID(__builtin_extract_return_addr(__builtin_return_address(0))), message);
+void JAPI_LogTrace(std::string message, ...) {
+    va_list args;
+    va_start(args, message);
+
+    LogOutputVaList(LOG_LEVEL_TRACE, message, GetModGUID(__builtin_extract_return_addr(__builtin_return_address(0))), args);
+
+    va_end(args);
 }
 
 std::string JAPI_ConfigBindString(std::string key, std::string defaultValue) {
@@ -133,4 +167,44 @@ bool JAPI_ConfigBindBool(std::string key, bool defaultValue) {
     SaveConfig(config);
 
     return value;
+}
+
+bool JAPI_ConfigRegisterString(std::string* value, std::string key, std::string defaultValue) {
+    ModConfig config = GetModConfig(GetModGUID(__builtin_extract_return_addr(__builtin_return_address(0))));
+    ConfigRegister(config.table, value, key, defaultValue);
+
+    // Save the config
+    SaveConfig(config);
+
+    return true;
+}
+
+bool JAPI_ConfigRegisterInt(int* value, std::string key, int defaultValue) {
+    ModConfig config = GetModConfig(GetModGUID(__builtin_extract_return_addr(__builtin_return_address(0))));
+    ConfigRegister(config.table, value, key, defaultValue);
+
+    // Save the config
+    SaveConfig(config);
+
+    return true;
+}
+
+bool JAPI_ConfigRegisterFloat(float* value, std::string key, float defaultValue) {
+    ModConfig config = GetModConfig(GetModGUID(__builtin_extract_return_addr(__builtin_return_address(0))));
+    ConfigRegister(config.table, value, key, defaultValue);
+
+    // Save the config
+    SaveConfig(config);
+
+    return true;
+}
+
+bool JAPI_ConfigRegisterBool(bool* value, std::string key, bool defaultValue) {
+    ModConfig config = GetModConfig(GetModGUID(__builtin_extract_return_addr(__builtin_return_address(0))));
+    ConfigRegister(config.table, value, key, defaultValue);
+
+    // Save the config
+    SaveConfig(config);
+
+    return true;
 }

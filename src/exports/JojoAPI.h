@@ -36,15 +36,27 @@ JEXP bool JAPI_HookASBRFunction(Hook* hook);
 JEXP bool JAPI_UnhookASBRFunction(Hook* hook);
 
 // Logging
-JEXP void JAPI_LogFatal(std::string message);
-JEXP void JAPI_LogError(std::string message);
-JEXP void JAPI_LogWarn(std::string message);
-JEXP void JAPI_LogInfo(std::string message);
-JEXP void JAPI_LogDebug(std::string message);
-JEXP void JAPI_LogTrace(std::string message);
+JEXP void JAPI_LogFatal(std::string message, ...);
+JEXP void JAPI_LogError(std::string message, ...);
+JEXP void JAPI_LogWarn(std::string message, ...);
+JEXP void JAPI_LogInfo(std::string message, ...);
+JEXP void JAPI_LogDebug(std::string message, ...);
+JEXP void JAPI_LogTrace(std::string message, ...);
 
 // Config
 JEXP std::string JAPI_ConfigBindString(std::string key, std::string defaultValue);
 JEXP int JAPI_ConfigBindInt(std::string key, int defaultValue);
 JEXP float JAPI_ConfigBindFloat(std::string key, float defaultValue);
 JEXP bool JAPI_ConfigBindBool(std::string key, bool defaultValue);
+
+// Plugin Directory
+JEXP std::string JAPI_GetPluginReservedDir();
+
+// Reserved for v3.0.0 (ImGUI integration)
+
+// DISCLAIMER: For now these do operate the same as `ConfigBind` options, but from v3.0.0 onwards, 
+// they will pop up in the ImGUI menu, and will be live-editable
+JEXP bool JAPI_ConfigRegisterString(std::string* value, std::string key, std::string defaultValue);
+JEXP bool JAPI_ConfigRegisterInt(int* value, std::string key, int defaultValue);
+JEXP bool JAPI_ConfigRegisterFloat(float* value, std::string key, float defaultValue);
+JEXP bool JAPI_ConfigRegisterBool(bool* value, std::string key, bool defaultValue);
