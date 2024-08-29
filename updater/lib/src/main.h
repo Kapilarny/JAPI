@@ -7,7 +7,7 @@
 
 #define JAPI_UPDATER_MAJOR 1
 #define JAPI_UPDATER_MINOR 1
-#define JAPI_UPDATER_PATCH 2
+#define JAPI_UPDATER_PATCH 3
 
 typedef struct Version {
     uint32_t major;
