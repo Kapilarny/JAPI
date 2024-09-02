@@ -1,4 +1,2 @@
-asmjit.dll
-asmtk.dll
 lua54.dll
 libwinpthread-1.dll
