@@ -21,7 +21,7 @@ void LogOutput(LogLevel level, const std::string& message, const std::string& pl
     std::string finalMessage = "[" + pluginGUID + "] " + level_strings[level] + message + "\n";
 
     if (!logFile.is_open()) {
-        logFile.open("JAPIUpdater.log", std::ios::out | std::ios::trunc);
+        logFile.open("japi/logs/JAPIUpdater.log", std::ios::out | std::ios::trunc);
     }
 
     // Write to log file

@@ -98,13 +98,20 @@ __int64 __fastcall sub_645828_Hook(unsigned __int64 a1, unsigned __int64 a2)
 void LoadCPKMods() {
     // Create mod config
     config = GetModConfig("CPKModLoader");
-    
+
     // Get all files in japi\cpks and load them
     for(auto& p : std::filesystem::directory_iterator("japi\\cpks")) {
         if(p.path().extension() == ".cpk") {
             cpks.push_back(p.path().string());
         }
     }
+
+    // JINFO("What");
+
+
+    // JTRACE("ASBR Preload Func Addr: %lld", JAPI::GetGameData().functions.CPKPreloadFunc - JAPI_GetASBRModuleBase());
+    // JTRACE("ASBR Load Func Addr: %lld", JAPI::GetGameData().functions.CPKLoadFunc - JAPI_GetASBRModuleBase());
+
     // Hook the CPK loading function
     Hook hook = {
         (void*) JAPI::GetGameData().functions.CPKPreloadFunc,
@@ -113,5 +120,5 @@ void LoadCPKMods() {
         "sub_645828"
     };
 
-    JAPI_HookASBRFunction(&hook);
+    JAPI_HookFunction(&hook);
 }

@@ -6,11 +6,14 @@
 #include <vector>
 #include <sol.hpp>
 
-typedef void (*EventCallback)(void* data);
+#include "../exports/JojoAPI.h"
 
 class EventTransmitter {
 public:
+    static void Init();
+
     static void TransmitEvent(std::string eventName, void* data);
+    static bool TransmitEventCancellable(std::string eventName, void* data);
 
     static void RegisterCallback(std::string eventName, EventCallback callback);
     static void RegisterLuaCallback(std::string eventName, sol::function callback);

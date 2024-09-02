@@ -7,9 +7,12 @@
 #include <filesystem>
 #include <MinHook.h>
 
+#include "events/event.h"
 #include "utils/logger.h"
 #include "utils/cpk.h"
 #include "exports/JojoAPI.h"
+#include "kiero/d3d11_impl.h"
+#include "kiero/kiero.h"
 #include "lua/script.h"
 // #include "lua/asm.h"
 
@@ -20,6 +23,7 @@ void JAPI::Init(HINSTANCE hinstDLL) {
 
     // Load config
     instance->japiConfig = GetModConfig("JAPI");
+    instance->pluginLoaderConfig = GetModConfig("PluginLoader");
     bool shouldSpawnConsole = ConfigBind<bool>(instance->japiConfig.table, "spawn_console", true);
     SaveConfig(instance->japiConfig);
     if(shouldSpawnConsole) {
@@ -42,13 +46,27 @@ void JAPI::Init(HINSTANCE hinstDLL) {
     GetModuleInformation(GetCurrentProcess(), GetModuleHandleA(0), &info, sizeof(MODULEINFO));
     instance->dwSize = info.SizeOfImage;
 
+    EventTransmitter::Init();
     ScriptManager::Init();
+
+    // input_hook_apply();
 
     JINFO("Initialized JojoAPI!");
     instance->LoadMods();
 }
 
 void JAPI::InitThread(HINSTANCE hInstDll) {
+    // Load kiero
+    auto result = kiero::init(kiero::RenderType::D3D11);
+    if(result != kiero::Status::Success) {
+        JFATAL("Kiero failed to initialize for D3D11! Error: %d", result);
+    } else {
+        JTRACE("Kiero initialized properly!");
+    }
+
+    // Run d3d11 impl
+    init_d3d11_hooks();
+
     // For now janky loop
     while(true) {
         ScriptManager::ExecuteScripts();
@@ -101,12 +119,57 @@ void JAPI::LoadMods() {
         }
     }
 
-    // Load CPK mods
-    LoadCPKMods();
+    bool shouldLoadCpkMods = ConfigBind<bool>(instance->pluginLoaderConfig.table, "load_cpk_mods", true);
+    bool shouldLoadDllPlugins = ConfigBind<bool>(instance->pluginLoaderConfig.table, "load_dll_plugins", true);
+    bool shouldLoadLuaPlugins = ConfigBind<bool>(instance->pluginLoaderConfig.table, "load_lua_plugins", true);
+    SaveConfig(instance->pluginLoaderConfig);
 
-    // Get all files in japi\mods and load them
+    // Load CPK mods
+    if(shouldLoadCpkMods) {
+        LoadCPKMods();
+    } else {
+        LOG_TRACE("PluginLoader", "Not loading CPK mods! (disabled)");
+    }
+
+    if(shouldLoadDllPlugins) {
+        LoadDllPlugins();
+    } else {
+        LOG_TRACE("PluginLoader", "Not loading DLL plugins! (disabled)");
+    }
+
+    if(shouldLoadLuaPlugins) {
+        LoadLuaPlugins();
+    } else {
+        LOG_TRACE("PluginLoader", "Not loading Lua plugins! (disabled)");
+    }
+
+    LOG_INFO("PluginLoader", "Loaded " + std::to_string(mods.size()) + " plugin(s)!");
+}
+
+std::string JAPI::GetModGUID(HANDLE modHandle) {
+    for(auto& mod : instance->mods) {
+        if(mod.handle == modHandle) {
+            return mod.meta.guid;
+        }
+    }
+
+    return "";
+}
+
+GameData& JAPI::GetGameData() {
+    return instance->gameData;
+}
+
+void JAPI::LoadDllPlugins() {
     for(auto& p : std::filesystem::directory_iterator("japi\\dll-plugins")) {
         if(p.path().extension() == ".dll") {
+            std::string name = p.path().filename().string();
+
+            if(name[0] == '-') {
+                LOG_TRACE("PluginLoader", "Skipping plugin: %s! (disabled)", name.c_str());
+                continue;
+            }
+
             // Load the DLL
             auto handle = LoadLibrary(p.path().string().c_str());
             if(!handle) {
@@ -133,8 +196,9 @@ void JAPI::LoadMods() {
             mods.push_back({modInfo, handle});
         }
     }
+}
 
-    // Get all files in japi\luamods and load them
+void JAPI::LoadLuaPlugins() {
     for(auto& p : std::filesystem::directory_iterator("japi\\lua-plugins")) {
         // Get mod filename
         std::string name = p.path().filename().string();
@@ -148,20 +212,4 @@ void JAPI::LoadMods() {
             ScriptManager::AddFileToWatch(p.path().string());
         }
     }
-
-    LOG_INFO("PluginLoader", "Loaded " + std::to_string(mods.size()) + " plugins!");
-}
-
-std::string JAPI::GetModGUID(HANDLE modHandle) {
-    for(auto& mod : instance->mods) {
-        if(mod.handle == modHandle) {
-            return mod.meta.guid;
-        }
-    }
-
-    return "";
-}
-
-GameData& JAPI::GetGameData() {
-    return instance->gameData;
 }

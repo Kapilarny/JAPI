@@ -3,12 +3,16 @@
 #include <windows.h>
 #include <tlhelp32.h>
 
+#include <utility>
+
 #include "japi.h"
 
 #include "utils/config.h"
 #include "utils/logger.h"
 #include "utils/mem.h"
 #include "utils/hooks.h"
+
+#include "events/event.h"
 
 // #include "lua/asm.h"
 
@@ -29,8 +33,12 @@ __int64 JAPI_GetASBRModuleBase() {
     return JAPI::GetASBRModuleBase();
 }
 
-__int64 JAPI_FindSignature(const char* signature, const char* mask) {
-    return (__int64)FindSignature((char*)JAPI::GetASBRModuleBase(), JAPI::GetASBRModuleSize(), signature, mask);
+__int64 JAPI_FindSignature(const char* signature) {
+    return GAME_SCAN(signature);
+}
+
+void JAPI_RegisterEventCallback(std::string eventName, EventCallback callback) {
+    EventTransmitter::RegisterCallback(std::move(eventName), callback);
 }
 
 void JAPI_PatchASBRMem(void* address, void* data, size_t size) {
@@ -169,42 +177,62 @@ bool JAPI_ConfigBindBool(std::string key, bool defaultValue) {
     return value;
 }
 
-bool JAPI_ConfigRegisterString(std::string* value, std::string key, std::string defaultValue) {
-    ModConfig config = GetModConfig(GetModGUID(__builtin_extract_return_addr(__builtin_return_address(0))));
-    ConfigRegister(config.table, value, key, defaultValue);
-
-    // Save the config
-    SaveConfig(config);
-
-    return true;
-}
-
 bool JAPI_ConfigRegisterInt(int* value, std::string key, int defaultValue) {
-    ModConfig config = GetModConfig(GetModGUID(__builtin_extract_return_addr(__builtin_return_address(0))));
-    ConfigRegister(config.table, value, key, defaultValue);
+    auto guid = GetModGUID(__builtin_extract_return_addr(__builtin_return_address(0)));
+    ModConfig config = GetModConfig(guid);
 
     // Save the config
     SaveConfig(config);
+
+    JAPI::GetRegisteredDataMap()[guid].ints.emplace_back(key, value);
 
     return true;
 }
 
 bool JAPI_ConfigRegisterFloat(float* value, std::string key, float defaultValue) {
-    ModConfig config = GetModConfig(GetModGUID(__builtin_extract_return_addr(__builtin_return_address(0))));
+    auto guid = GetModGUID(__builtin_extract_return_addr(__builtin_return_address(0)));
+    ModConfig config = GetModConfig(guid);
+
     ConfigRegister(config.table, value, key, defaultValue);
 
     // Save the config
     SaveConfig(config);
+
+    JAPI::GetRegisteredDataMap()[guid].floats.emplace_back(key, value);
 
     return true;
 }
 
 bool JAPI_ConfigRegisterBool(bool* value, std::string key, bool defaultValue) {
-    ModConfig config = GetModConfig(GetModGUID(__builtin_extract_return_addr(__builtin_return_address(0))));
+    auto guid = GetModGUID(__builtin_extract_return_addr(__builtin_return_address(0)));
+    ModConfig config = GetModConfig(guid);
+
     ConfigRegister(config.table, value, key, defaultValue);
 
     // Save the config
     SaveConfig(config);
+
+    JAPI::GetRegisteredDataMap()[guid].bools.emplace_back(key, value);
+
+    return true;
+}
+
+JEXP bool JAPI_ConfigRegisterString(char* buffer, std::string key, const char* defaultString) {
+    auto guid = GetModGUID(__builtin_extract_return_addr(__builtin_return_address(0)));
+    ModConfig config = GetModConfig(guid);
+
+    if(config.table.contains(key)) {
+        std::string str = config.table[key].value_or(std::string(defaultString));
+        strcpy(buffer, str.c_str());
+    } else {
+        strcpy(buffer, defaultString);
+        config.table.insert_or_assign(key, std::string(defaultString));
+    }
+
+    // Save the config
+    SaveConfig(config);
+
+    JAPI::GetRegisteredDataMap()[guid].strings.emplace_back(key, buffer);
 
     return true;
 }

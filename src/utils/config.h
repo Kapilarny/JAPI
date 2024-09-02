@@ -36,7 +36,5 @@ template <typename T>
 bool ConfigRegister(toml::table& table, T* value, std::string key, T defaultValue) {
     *value = ConfigBind<T>(table, key, defaultValue);
 
-    // TODO: register the value to the imgui config window
-
     return true;
 }

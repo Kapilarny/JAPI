@@ -16,5 +16,5 @@ typedef struct GameData {
     GameData();
 
     GameType game_type;
-    GameFunctions functions;
+    GameFunctions functions{};
 } GameData;
