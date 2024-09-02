@@ -120,5 +120,5 @@ void LoadCPKMods() {
         "sub_645828"
     };
 
-    JAPI_HookFunction(&hook);
+    JAPI_HookASBRFunction(&hook);
 }
