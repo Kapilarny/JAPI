@@ -124,9 +124,29 @@ void ScriptManager::LoadCommands(sol::state& lua, ScriptData* scriptData) {
         LOG_FATAL(lua["config"]["name"], message);
     };
 
-    // lua["find_sig"] = [&](std::string sig, std::string mask) {
-    //     return (uintptr_t)JAPI_FindSignature(sig.c_str(), mask.c_str());
-    // };
+    lua["find_sig"] = [&](std::string sig, std::string mask) {
+        auto sig_func = [&]() {
+            unsigned int patternLength = sig.length();
+            auto size = JAPI::GetASBRModuleSize();
+            char* begin = (char*)JAPI::GetASBRModuleBase();
+
+            for (unsigned int i = 0; i < size - patternLength; i++) {
+                bool found = true;
+                for (unsigned int j = 0; j < patternLength; j++) {
+                    if (mask[j] != '?' && sig[j] != *(begin + i + j)) {
+                        found = false;
+                        break;
+                    }
+                }
+                if (found) {
+                    return (begin + i);
+                }
+            }
+            return (char*)nullptr;
+        };
+
+        return (uintptr_t) sig_func();
+    };
 
     lua["patch_mem"] = [&](uintptr_t address, std::string data) {
         JAPI_PatchMem((void*)address, data.data(), data.size());
