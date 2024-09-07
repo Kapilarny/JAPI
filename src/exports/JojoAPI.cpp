@@ -38,7 +38,7 @@ __int64 JAPI_FindSignature(const char* signature) {
 }
 
 void JAPI_RegisterEventCallback(std::string eventName, EventCallback callback) {
-    EventTransmitter::RegisterCallback(std::move(eventName), callback);
+    EventTransmitter::RegisterCallback(eventName, callback);
 }
 
 void JAPI_PatchASBRMem(void* address, void* data, size_t size) {
@@ -58,7 +58,7 @@ void JAPI_CopyMem(void* dest, void* src, size_t size) {
 }
 
 std::string JAPI_GetPluginReservedDir() {
-    return "japi\\dll-plugins" + std::string(GetModGUID(__builtin_extract_return_addr(__builtin_return_address(0))));
+    return "japi\\dll-plugins\\" + std::string(GetModGUID(__builtin_extract_return_addr(__builtin_return_address(0))));
 }
 
 // void JAPI_ExecuteASMCode(std::string code) {
@@ -180,6 +180,8 @@ bool JAPI_ConfigBindBool(std::string key, bool defaultValue) {
 bool JAPI_ConfigRegisterInt(int* value, std::string key, int defaultValue) {
     auto guid = GetModGUID(__builtin_extract_return_addr(__builtin_return_address(0)));
     ModConfig config = GetModConfig(guid);
+
+    ConfigRegister(config.table, value, key, defaultValue);
 
     // Save the config
     SaveConfig(config);

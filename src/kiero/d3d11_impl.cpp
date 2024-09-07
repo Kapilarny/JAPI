@@ -121,7 +121,8 @@ void imgui_update() {
 		ImGui::EndTabBar();
 	}
 
-	EventTransmitter::TransmitEvent("ImGUIRenderEvent", nullptr);
+	ImGUIRenderEvent e{};
+	EventTransmitter::TransmitEvent("ImGUIRenderEvent", &e);
 
 	ImGui::End();
 

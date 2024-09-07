@@ -30,6 +30,8 @@ struct HWNDCallbackEvent {
 };
 
 // "ImGUIRenderEvent"
-struct ImGUIRenderEvent { /* No data */ };
+struct ImGUIRenderEvent {
+    /* No Data */
+};
 
 #endif //JAPIEVENTS_H

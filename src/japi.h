@@ -19,7 +19,7 @@ public:
     static std::string GetModGUID(HANDLE modHandle);
     static GameData& GetGameData();
 
-    static std::string GetJAPIVersionString() { return "3.0.1"; }
+    static std::string GetJAPIVersionString() { return "3.0.3"; }
     static const std::vector<ModData>& GetMods() { return instance->mods; }
     static std::unordered_map<std::string, RegisteredConfigData>& GetRegisteredDataMap() { return instance->mod_registered_data; }
     static RegisteredConfigData GetConfigData(const std::string& guid) { return instance->mod_registered_data[guid]; }

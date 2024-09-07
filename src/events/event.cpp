@@ -1,5 +1,7 @@
 #include "event.h"
 
+#include "utils/logger.h"
+
 void EventTransmitter::Init() {
     instance = std::make_unique<EventTransmitter>();
 }
