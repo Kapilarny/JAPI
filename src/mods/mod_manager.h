@@ -12,7 +12,7 @@
 #include "utils/config.h"
 
 // void DrawImGUI();
-typedef void (*DllModDrawImGUI)();
+typedef void (__stdcall* DllModDrawImGUI)();
 
 struct dll_mod_meta {
     const char* name{};
