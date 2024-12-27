@@ -1,7 +1,3 @@
-//
-// Created by user on 31.08.2024.
-//
-
 #ifndef JAPIEVENTS_H
 #define JAPIEVENTS_H
 

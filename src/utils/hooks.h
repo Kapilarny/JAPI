@@ -1,8 +1,15 @@
-#pragma once
+//
+// Created by user on 27.12.2024.
+//
 
-#include <string>
+#ifndef HOOKS_H
+#define HOOKS_H
 
-#include "exports/JojoAPI.h"
+#include "exports/JoJoAPI.h"
 
-bool HookFunction(Hook* hook);
-bool UnhookFunction(Hook* hook);
+namespace hooks {
+    bool hook_function(const JAPIHook& hook);
+    bool unhook_function(const JAPIHook& hook);
+}
+
+#endif //HOOKS_H

@@ -1,40 +1,52 @@
-#pragma once
+//
+// Created by user on 27.12.2024.
+//
 
+#ifndef CONFIG_H
+#define CONFIG_H
 #include <string>
 #include <toml.hpp>
-#include <filesystem>
+#include <utility>
 
-#include "exports/JojoAPI.h"
+class config {
+public:
+    static config load_mod_config(const std::string& mod_name);
+    static config load(const std::string& path);
 
-#include <fstream>
+    void save();
 
-typedef struct ModConfig {
-    std::string filePath;
-    toml::table table;
-} ModConfig;
+    [[nodiscard]] bool has(const std::string& key) const { return table.contains(key); }
 
-ModConfig GetModConfig(std::string modName);
-void SaveConfig(ModConfig& config);
-
-template <typename T>
-inline T ConfigBind(toml::table& table, std::string key, T defaultValue) {
-    if (table.contains(key)) {
-        return table[key].value_or(defaultValue);
+    template <typename T>
+    T get(const std::string& key, T default_value) {
+        return table[key].value_or(default_value);
     }
 
-    table.insert_or_assign(key, defaultValue);
+    template <typename T>
+    void set(const std::string& key, T value) {
+        table.insert_or_assign(key, value);
 
-    return defaultValue;
-}
+        save(); // Save the value to the file
+    }
 
-template <typename T>
-void ConfigSet(toml::table& table, std::string key, T value) {
-    table.insert_or_assign(key, value);
-}
+    template <typename T>
+    T bind(const std::string& key, T default_value) {
+        if (!has(key)) {
+            set<T>(key, default_value);
 
-template <typename T>
-bool ConfigRegister(toml::table& table, T* value, std::string key, T defaultValue) {
-    *value = ConfigBind<T>(table, key, defaultValue);
+            save(); // Save the default value to the file
+            return default_value;
+        }
 
-    return true;
-}
+        return get<T>(key, default_value);
+    }
+
+    toml::table& get_data() { return table; }
+private:
+    config(std::string path, toml::table table) : table(table), path(path) {}
+
+    toml::table table;
+    std::string path;
+};
+
+#endif //CONFIG_H

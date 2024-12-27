@@ -1,43 +1,26 @@
 #include "event.h"
 
-#include "utils/logger.h"
-
-void EventTransmitter::Init() {
-    instance = std::make_unique<EventTransmitter>();
+void event_transmitter::init() {
+    instance = std::make_unique<event_transmitter>();
 }
 
-void EventTransmitter::TransmitEvent(std::string eventName, void* data) {
-    for (auto& callback : instance->cppEventCallbacks[eventName]) {
-        callback(data);
-    }
-
-    for (auto& callback : instance->luaEventCallbacks[eventName]) {
+void event_transmitter::transmit_event(const std::string &eventName, void* data) {
+    for (auto& callback : instance->cpp_event_callbacks[eventName]) {
         callback(data);
     }
 }
 
-bool EventTransmitter::TransmitEventCancellable(std::string eventName, void *data) {
+bool event_transmitter::transmit_event_cancellable(const std::string &eventName, void *data) {
     bool cancelled = false;
 
-    for (auto& callback : instance->cppEventCallbacks[eventName]) {
+    for (auto& callback : instance->cpp_event_callbacks[eventName]) {
         auto result = callback(data);
 
         if(!result) cancelled = true;
     }
-
-    for (auto& callback : instance->luaEventCallbacks[eventName]) {
-        auto result = callback(data);
-
-        if(!result) cancelled = true;
-    }
-
     return cancelled;
 }
 
-void EventTransmitter::RegisterCallback(std::string eventName, EventCallback callback) {
-    instance->cppEventCallbacks[eventName].push_back(callback);
-}
-
-void EventTransmitter::RegisterLuaCallback(std::string eventName, sol::function callback) {
-    instance->luaEventCallbacks[eventName].push_back(callback);
+void event_transmitter::register_callback(const std::string & eventName, EventCallback callback) {
+    instance->cpp_event_callbacks[eventName].push_back(callback);
 }
