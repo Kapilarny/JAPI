@@ -27,6 +27,14 @@ const char* get_mod_guid(const void* ret_addr) {
     return meta->name;
 }
 
+uint64_t JAPI_GetModuleBase() {
+    return japi::get_instance().get_module_base();
+}
+
+HMODULE JAPI_GetPluginModuleHandle(const char *pluginGUID) {
+    return mod_manager::get_instance()->get_mod_hmodule(pluginGUID);
+}
+
 uint64_t JAPI_FindSignature(const char *signature) {
     return GAME_SCAN(signature);
 }

@@ -103,6 +103,7 @@ void mod_manager::load_mods() {
 
         // Add the mod to the loaded mods
         instance->loaded_mods[mod] = meta;
+        instance->guid_to_mod[retr_meta.guid] = mod;
 
         // Call the mod init function
         auto mod_init = (void(__stdcall*)())GetProcAddress(mod, "ModInit");

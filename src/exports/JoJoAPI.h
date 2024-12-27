@@ -28,7 +28,7 @@ typedef struct JAPIHook {
 } JAPIHook;
 
 typedef struct JAPIModDependencies {
-    uint32_t dependencies_count;
+    size_t dependencies_count;
     const char** dependencies;
 } JAPIModDependencies;
 
@@ -58,6 +58,7 @@ JEXP bool JAPI_ConfigBindBool(const char* key, bool defaultValue);
 
 // Misc
 JEXP char* JAPI_GetPluginReservedDir(); // WARNING: The callee is responsible for freeing the returned string
+JEXP HMODULE JAPI_GetPluginModuleHandle(const char* pluginGUID);
 
 // Events
 JEXP void JAPI_RegisterEventCallback(const char* name, EventCallback callback);

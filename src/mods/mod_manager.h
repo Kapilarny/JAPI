@@ -42,6 +42,16 @@ public:
 
         return &it->second;
     }
+
+    HMODULE get_mod_hmodule(const std::string& guid) {
+        // Lookup the module
+        const auto it = guid_to_mod.find(guid);
+        if (it == guid_to_mod.end()) {
+            return nullptr;
+        }
+
+        return it->second;
+    }
 private:
     mod_manager() = default;
 
@@ -49,6 +59,7 @@ private:
 
     static inline std::unique_ptr<mod_manager> instance;
     std::unordered_map<HMODULE, dll_mod_meta> loaded_mods;
+    std::unordered_map<std::string, HMODULE> guid_to_mod;
 };
 
 
