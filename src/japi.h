@@ -20,8 +20,10 @@ public:
 
     static japi& get_instance() { return *instance; }
 
-    uint64_t get_module_base() const { return module_base; }
-    uint64_t get_module_size() const { return module_size; }
+    [[nodiscard]] uint64_t get_module_base() const { return module_base; }
+    [[nodiscard]] uint64_t get_module_size() const { return module_size; }
+
+    [[nodiscard]] game_type get_game_type() const { return type; }
 private:
     japi() = default;
 

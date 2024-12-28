@@ -11,6 +11,8 @@
 
 #include "utils/config.h"
 
+#include <json.hpp>
+
 // void DrawImGUI();
 typedef void (__stdcall* DllModDrawImGUI)();
 
@@ -29,7 +31,8 @@ class mod_manager {
 public:
     static void init();
 
-    void draw_imgui_menu();
+    void draw_imgui_mods_tab();
+    void load_mod_manifest();
 
     static mod_manager* get_instance() { return instance.get(); }
 
@@ -42,24 +45,17 @@ public:
 
         return &it->second;
     }
-
-    HMODULE get_mod_hmodule(const std::string& guid) {
-        // Lookup the module
-        const auto it = guid_to_mod.find(guid);
-        if (it == guid_to_mod.end()) {
-            return nullptr;
-        }
-
-        return it->second;
-    }
 private:
     mod_manager() = default;
 
     void load_mods();
 
     static inline std::unique_ptr<mod_manager> instance;
+
     std::unordered_map<HMODULE, dll_mod_meta> loaded_mods;
-    std::unordered_map<std::string, HMODULE> guid_to_mod;
+    std::unordered_map<std::string, HMODULE> loaded_mods_by_guid;
+    nlohmann::json manifest;
+    bool manifest_loaded = false;
 };
 
 

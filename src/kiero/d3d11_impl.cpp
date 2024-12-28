@@ -51,7 +51,7 @@ void imgui_update() {
 	if(ImGui::BeginTabBar("tabs")) {
 		if(ImGui::BeginTabItem("Mods")) {
 			// TODO: Implement mods tab
-			mod_manager::get_instance()->draw_imgui_menu();
+			mod_manager::get_instance()->draw_imgui_mods_tab();
 
 			ImGui::EndTabItem();
 		}
@@ -76,7 +76,7 @@ void imgui_update() {
 	}
 
 	ImGUIRenderEvent e{};
-	event_transmitter::transmit_event("imgui_render", &e);
+	event_transmitter::transmit_event("ImGUIRenderEvent", &e);
 
 	ImGui::End();
 

@@ -43,6 +43,8 @@ add_library(d3dcompiler_47 SHARED ${SOURCES} "dll.def"
         src/utils/hooks.cpp
         src/utils/hooks.h
         src/utils/mem.h
+        src/utils/downloader.cpp
+        src/utils/downloader.h
 )
 
 target_include_directories(d3dcompiler_47 PUBLIC "src" "external/minhook/include" "external/lua/include" "external/toml" "external/sol2/" "external/nlohmann")
@@ -54,4 +56,5 @@ target_link_libraries(d3dcompiler_47 PUBLIC
         # "${CMAKE_CURRENT_SOURCE_DIR}/external/built/asmjit.dll"
         # "${CMAKE_CURRENT_SOURCE_DIR}/external/built/asmtk.dll"
         imgui_shared
+        winhttp
 )

@@ -58,7 +58,6 @@ JEXP bool JAPI_ConfigBindBool(const char* key, bool defaultValue);
 
 // Misc
 JEXP char* JAPI_GetPluginReservedDir(); // WARNING: The callee is responsible for freeing the returned string
-JEXP HMODULE JAPI_GetPluginModuleHandle(const char* pluginGUID);
 
 // Events
 JEXP void JAPI_RegisterEventCallback(const char* name, EventCallback callback);

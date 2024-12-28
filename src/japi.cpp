@@ -46,7 +46,6 @@ void japi::initialize(HINSTANCE dll_h_inst) {
 
     // Init events
     event_transmitter::init();
-
     mod_manager::init();
 
     JINFO("Initialized JoJoAPI!");
@@ -61,6 +60,9 @@ void japi::run_thread(HINSTANCE h_inst) {
     }
 
     init_d3d11_hooks();
+
+    JAPILateInitEvent e{};
+    event_transmitter::transmit_event("JAPILateInitEvent", &e);
 
     // some update loop could be here, but we don't need it for now
 }

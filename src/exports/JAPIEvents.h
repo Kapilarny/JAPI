@@ -30,4 +30,9 @@ struct ImGUIRenderEvent {
     /* No Data */
 };
 
+// "JAPILateInitEvent"
+struct JAPILateInitEvent {
+    /* No Data */
+};
+
 #endif //JAPIEVENTS_H
