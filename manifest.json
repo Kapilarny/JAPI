@@ -1,0 +1,26 @@
+{
+   "manifest_version": "1.0.0",
+   "games": {
+      "ASBR": [
+          {
+              "name": "Test Mod",
+              "guid": "TestMod",
+              "author": "Kapilarny",
+              "version": "1.0.0",
+              "description": "This is a test mod",
+              "url": "...",
+              "dependencies": ["AnotherMod"]
+          },
+          {
+            "name": "Yet Another Mod",
+            "guid": "AnotherMod",
+            "author": "Kapilarny",
+            "version": "1.0.0",
+            "description": "This is an another test mod",
+            "url": "...",
+            "dependencies": []
+        }
+      ],
+      "NSUNSC": []
+   }
+ }
