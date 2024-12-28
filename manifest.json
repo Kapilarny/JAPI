@@ -1,5 +1,5 @@
 {
-   "manifest_version": 1,
+   "manifest_version": 2,
    "games": {
       "ASBR": [
           {
@@ -19,7 +19,16 @@
             "description": "This is an another test mod",
             "url": "...",
             "dependencies": []
+        },
+         {
+            "name": "LeBron James",
+            "guid": "Lebron",
+            "author": "Kapilarny",
+            "version": "1.0.0",
+            "description": "LEBRONNNNNNNNNNNNNNNNNNNNNNNNNNNNN",
+            "url": "...",
+            "dependencies": []
         }
-      ],
+      ]
    }
  }
