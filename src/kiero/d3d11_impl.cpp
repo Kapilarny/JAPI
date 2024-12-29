@@ -2,6 +2,7 @@
 #include "kiero.h"
 #include "events/event.h"
 #include "mods/mod_manager.h"
+#include "utils/hooks.h"
 #include "utils/logger.h"
 
 #if KIERO_INCLUDE_D3D11
@@ -20,6 +21,21 @@ typedef long(__stdcall* Present)(IDXGISwapChain*, UINT, UINT);
 static Present oPresent = NULL;
 
 static bool shouldWindowBeOpen = true;
+
+typedef UINT (__stdcall *GetRawInputData_t)(HRAWINPUT hRawInput, UINT uiCommand, LPVOID pData, PUINT pcbSize, UINT cbSizeHeader);
+GetRawInputData_t oGetRawInputData = nullptr;
+
+UINT __stdcall hkGetRawInputData(HRAWINPUT hRawInput, UINT uiCommand, LPVOID pData, PUINT pcbSize, UINT cbSizeHeader)
+{
+	auto result = oGetRawInputData(hRawInput, uiCommand, pData, pcbSize, cbSizeHeader);
+
+	// Check if we should block the input because of ImGUI
+	if(ImGui::GetIO().WantCaptureMouse || ImGui::GetIO().WantCaptureKeyboard) {
+		return 0;
+	}
+
+	return result;
+}
 
 ImVec4 HSVtoRGB(float h, float s, float v)
 {
@@ -130,6 +146,19 @@ void init_d3d11_hooks()
 {
 	// JTRACE("Hooking d3d11!");
 	assert(kiero::bind(8, (void**)&oPresent, (void*)hkPresent11) == kiero::Status::Success);
+
+	// Hook GetRawInputData
+	HMODULE hUser32 = GetModuleHandleA("user32.dll");
+	oGetRawInputData = (GetRawInputData_t)GetProcAddress(hUser32, "GetRawInputData");
+
+	JAPIHook hook = {
+		.target = (uint64_t)oGetRawInputData,
+		.detour = (void*)hkGetRawInputData,
+		.original = (void*)&oGetRawInputData,
+		.name = "GetRawInputData"
+	};
+
+	hooks::hook_function(hook);
 }
 
 #endif // KIERO_INCLUDE_D3D11

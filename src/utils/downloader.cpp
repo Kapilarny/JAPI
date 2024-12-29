@@ -17,7 +17,7 @@ bool downloader::is_404(std::vector<uint8_t>& buffer) {
 std::vector<uint8_t> downloader::download_file(std::string url) {
     std::vector<uint8_t> buffer;
 
-    JINFO("Downloading " + url);
+    JTRACE("Downloading " + url);
 
     //  URL_COMPONENTS urlComp;
     URL_COMPONENTS urlComp;
@@ -120,7 +120,7 @@ std::vector<uint8_t> downloader::download_file(std::string url) {
         totalDownloaded += dwDownloaded;
     } while(dwSize > 0);
 
-    JINFO("Downloaded " + std::to_string(buffer.size()) + " bytes");
+    JTRACE("Downloaded " + std::to_string(buffer.size()) + " bytes");
 
     WinHttpCloseHandle(hRequest);
     WinHttpCloseHandle(hConnect);

@@ -7,6 +7,7 @@
 #include "japi.h"
 #include "events/event.h"
 #include "mods/mod_manager.h"
+#include "utils/downloader.h"
 #include "utils/hooks.h"
 #include "utils/logger.h"
 #include "utils/mem.h"
@@ -25,6 +26,30 @@ const char* get_mod_guid(const void* ret_addr) {
     }
 
     return meta->name;
+}
+
+bool JAPI_DownloadFile(const char *url, const char *save_path) {
+    // Download the file
+    std::vector<uint8_t> buffer = downloader::download_file(url);
+    if(buffer.empty()) {
+        JERROR("Failed to download file from URL: %s", url);
+        return false;
+    }
+
+    // Create directories if they don't exist
+    std::filesystem::create_directories(std::filesystem::path(save_path).parent_path());
+
+    // Write the buffer to the file
+    std::ofstream file(save_path, std::ios::binary);
+    if (!file.is_open()) {
+        JERROR("Failed to open file for writing: %s", save_path);
+        return false;
+    }
+
+    file.write(reinterpret_cast<const char*>(buffer.data()), buffer.size());
+    file.close();
+
+    return true;
 }
 
 uint64_t JAPI_GetModuleBase() {
@@ -117,6 +142,46 @@ bool JAPI_ConfigBindBool(const char *key, bool defaultValue) {
     }
 
     return meta->mod_config.bind<bool>(key, defaultValue);
+}
+
+void JAPI_ConfigSetString(const char *key, const char *value) {
+    dll_mod_meta* meta = get_mod_meta(__builtin_return_address(0));
+    if(!meta) {
+        JFATAL("Tried to set config key \"%s\" for unknown mod", key);
+        return;
+    }
+
+    meta->mod_config.set(key, value);
+}
+
+void JAPI_ConfigSetInt(const char *key, int value) {
+    dll_mod_meta* meta = get_mod_meta(__builtin_return_address(0));
+    if(!meta) {
+        JFATAL("Tried to set config key \"%s\" for unknown mod", key);
+        return;
+    }
+
+    meta->mod_config.set(key, value);
+}
+
+void JAPI_ConfigSetFloat(const char *key, float value) {
+    dll_mod_meta* meta = get_mod_meta(__builtin_return_address(0));
+    if(!meta) {
+        JFATAL("Tried to set config key \"%s\" for unknown mod", key);
+        return;
+    }
+
+    meta->mod_config.set(key, value);
+}
+
+void JAPI_ConfigSetBool(const char *key, bool value) {
+    dll_mod_meta* meta = get_mod_meta(__builtin_return_address(0));
+    if(!meta) {
+        JFATAL("Tried to set config key \"%s\" for unknown mod", key);
+        return;
+    }
+
+    meta->mod_config.set(key, value);
 }
 
 void JAPI_LogFatal(const char *fmt, ...) {

@@ -56,8 +56,14 @@ JEXP int JAPI_ConfigBindInt(const char* key, int defaultValue);
 JEXP float JAPI_ConfigBindFloat(const char* key, float defaultValue);
 JEXP bool JAPI_ConfigBindBool(const char* key, bool defaultValue);
 
+JEXP void JAPI_ConfigSetString(const char* key, const char* value);
+JEXP void JAPI_ConfigSetInt(const char* key, int value);
+JEXP void JAPI_ConfigSetFloat(const char* key, float value);
+JEXP void JAPI_ConfigSetBool(const char* key, bool value);
+
 // Misc
 JEXP char* JAPI_GetPluginReservedDir(); // WARNING: The callee is responsible for freeing the returned string
+JEXP bool JAPI_DownloadFile(const char* url, const char* save_path);
 
 // Events
 JEXP void JAPI_RegisterEventCallback(const char* name, EventCallback callback);

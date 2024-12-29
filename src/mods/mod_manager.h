@@ -49,6 +49,13 @@ private:
     mod_manager() = default;
 
     void load_mods();
+    void lazy_load_mod(HMODULE mod, const char* mod_guid);
+    bool grab_and_load_mod_from_manifest(const nlohmann::basic_json<>& entry, HMODULE* out_mod);
+    void download_manifest();
+    void parse_manifest();
+
+
+    uint64_t get_latest_manifest_version();
 
     static inline std::unique_ptr<mod_manager> instance;
 
