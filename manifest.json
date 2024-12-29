@@ -3,30 +3,14 @@
    "games": {
       "ASBR": [
           {
-              "name": "Test Mod",
-              "guid": "TestMod",
-              "author": "Kapilarny",
-              "version": "1.0.0",
-              "description": "This is a test mod",
-              "url": "...",
-              "dependencies": ["AnotherMod"]
-          },
-          {
-            "name": "Yet Another Mod",
-            "guid": "AnotherMod",
+            "name": "CPK Mod Loader",
+            "guid": "CPKModLoader",
             "author": "Kapilarny",
             "version": "1.0.0",
-            "description": "This is an another test mod",
-            "url": "...",
-            "dependencies": []
-        },
-         {
-            "name": "LeBron James",
-            "guid": "Lebron",
-            "author": "Kapilarny",
-            "version": "1.0.0",
-            "description": "LEBRONNNNNNNNNNNNNNNNNNNNNNNNNNNNN",
-            "url": "...",
+            "description": "Allows for the loadage of .cpk mods!",
+            "url": "https://github.com/Kapilarny/JAPI/raw/refs/heads/3_1_0_rewrite/libJAPIPlugin.dll",
+            "source_url": "https://github.com/Kapilarny/JAPI/",
+            "lazy_load": false,
             "dependencies": []
         }
       ]
