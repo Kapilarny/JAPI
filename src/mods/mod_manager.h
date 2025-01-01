@@ -12,6 +12,7 @@
 #include "utils/config.h"
 
 #include <json.hpp>
+#include <unordered_set>
 
 // void DrawImGUI();
 typedef void (__stdcall* DllModDrawImGUI)();
@@ -31,8 +32,12 @@ class mod_manager {
 public:
     static void init();
 
+    void download_mod_with_deps_async(const nlohmann::basic_json<> &entry, const std::string &guid, const std::string &name);
+
     void draw_imgui_mods_tab();
     void load_mod_manifest();
+
+    void download_default_plugins();
 
     static mod_manager* get_instance() { return instance.get(); }
 
@@ -49,6 +54,10 @@ private:
     mod_manager() = default;
 
     void load_mods();
+
+    void download_mod_with_deps_sync(const nlohmann::basic_json<> &entry, const std::string &guid,
+                                     const std::string &name);
+
     void lazy_load_mod(HMODULE mod, const char* mod_guid);
     bool grab_and_load_mod_from_manifest(const nlohmann::basic_json<>& entry, HMODULE* out_mod);
     void download_manifest();
@@ -61,6 +70,7 @@ private:
 
     std::unordered_map<HMODULE, dll_mod_meta> loaded_mods;
     std::unordered_map<std::string, HMODULE> loaded_mods_by_guid;
+    std::unordered_set<std::string> downloaded_mods; // not loaded mods, just downloaded
     nlohmann::json manifest;
     bool manifest_loaded = false;
 };

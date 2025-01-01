@@ -45,6 +45,8 @@ add_library(d3dcompiler_47 SHARED ${SOURCES} "dll.def"
         src/utils/mem.h
         src/utils/downloader.cpp
         src/utils/downloader.h
+        src/utils/reloader.cpp
+        src/utils/reloader.h
 )
 
 target_include_directories(d3dcompiler_47 PUBLIC "src" "external/minhook/include" "external/lua/include" "external/toml" "external/sol2/" "external/nlohmann")

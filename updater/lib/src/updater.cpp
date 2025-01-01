@@ -56,6 +56,28 @@ int UpdaterMain() {
         freopen_s((FILE**)stdout, "CONOUT$", "w", stdout);
     }
 
+    JINFO("Grabbing window hwnd!");
+    std::string window_name = "JoJoAPI Console";
+
+    HWND game_hwnd = FindWindowA(NULL, window_name.c_str());
+    if(game_hwnd) {
+        DWORD pid;
+        GetWindowThreadProcessId(game_hwnd, &pid);
+
+        // Terminate the process
+        HANDLE process = OpenProcess(PROCESS_TERMINATE, FALSE, pid);
+        if(process) {
+            TerminateProcess(process, 0);
+            CloseHandle(process);
+        }
+
+        JINFO("Terminated the game process!");
+        do {
+            if(!GetWindowThreadProcessId(game_hwnd, &pid)) break;
+            Sleep(1000);
+        } while(pid != 0);
+    }
+
     if(first_run) {
         int auto_update = MessageBoxA(NULL, "Do you want to enable auto-updates?", "JojoAPI Updater", MB_YESNO | MB_ICONQUESTION);
         should_update = auto_update == IDYES;

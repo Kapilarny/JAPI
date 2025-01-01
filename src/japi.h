@@ -24,6 +24,8 @@ public:
     [[nodiscard]] uint64_t get_module_size() const { return module_size; }
 
     [[nodiscard]] game_type get_game_type() const { return type; }
+
+    [[nodiscard]] bool should_download_default_plugins() const { return download_default_plugins; }
 private:
     japi() = default;
 
@@ -37,6 +39,7 @@ private:
     game_type type = game_type::UNKNOWN;
 
     config japi_cfg = config::load_mod_config("JAPI");
+    bool download_default_plugins = false;
 };
 
 #endif //JAPI_H

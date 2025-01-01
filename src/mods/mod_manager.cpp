@@ -6,6 +6,7 @@
 
 #include <filesystem>
 #include <imgui.h>
+#include <thread>
 #include <unordered_set>
 
 #include "japi.h"
@@ -13,14 +14,53 @@
 #include "exports/JoJoAPI.h"
 #include "utils/downloader.h"
 #include "utils/logger.h"
+#include "utils/reloader.h"
 
 #define MODLOADER_GUID "DllPluginLoader"
+
+std::mutex download_mutex; // protects `is_downloading` and `currently_downloading`
+bool is_downloading = false;
+std::string currently_downloading;
 
 bool manifest_event_handler(void* e) {
     // Load the mod manifest
     mod_manager::get_instance()->load_mod_manifest();
 
+    // If should download default plugins, download them
+    if(japi::get_instance().should_download_default_plugins()) {
+        mod_manager::get_instance()->download_default_plugins();
+    }
+
     return false;
+}
+
+void mod_manager::download_default_plugins() {
+    // Grab all the default plugins
+    const auto& default_plugins = manifest["default_plugins"][game_type_to_string(japi::get_instance().get_game_type())];
+
+    const auto& mod_array = manifest["games"][game_type_to_string(japi::get_instance().get_game_type())];
+
+    // Download the default plugins
+    for(const auto& entry : default_plugins) {
+        // Try to find the proper entry
+        const auto it = std::find_if(mod_array.begin(), mod_array.end(), [&entry](const nlohmann::json& mod) {
+            return mod["guid"] == entry;
+        });
+
+        auto proper_entry = *it;
+        std::string guid = proper_entry["guid"];
+        std::string name = proper_entry["name"];
+
+        if(loaded_mods_by_guid.contains(guid) || downloaded_mods.contains(guid)) continue;
+
+        // Download the mod
+        download_mod_with_deps_sync(proper_entry, guid, name);
+    }
+
+    Sleep(1000); // wait a second for a good measure
+
+    // Reboot the game
+    reloader::reload_game();
 }
 
 void mod_manager::init() {
@@ -37,7 +77,7 @@ void mod_manager::download_manifest() {
     // Download the manifest file
     JINFO("Downloading manifest file...");
 
-    std::vector<uint8_t> buffer = downloader::download_file("http://raw.githubusercontent.com/Kapilarny/JAPI/master/manifest.json");
+    std::vector<uint8_t> buffer = downloader::download_file("http://raw.githubusercontent.com/JoJosBizarreModdingCommunity/JAPI_PluginRepository/main/manifest.json");
     if(buffer.empty()) {
         LOG_ERROR(MODLOADER_GUID, "Failed to download manifest file");
         return;
@@ -56,7 +96,7 @@ void mod_manager::download_manifest() {
 }
 
 uint64_t mod_manager::get_latest_manifest_version() {
-    std::vector<uint8_t> buffer = downloader::download_file("http://raw.githubusercontent.com/Kapilarny/JAPI/master/manifest_version.txt");
+    std::vector<uint8_t> buffer = downloader::download_file("http://raw.githubusercontent.com/JoJosBizarreModdingCommunity/JAPI_PluginRepository/main/manifest_version.txt");
     if(buffer.empty()) {
         LOG_ERROR(MODLOADER_GUID, "Failed to download manifest version file");
         return 0;
@@ -186,7 +226,82 @@ void mod_manager::load_mods() {
  * }
  */
 
+void mod_manager::download_mod_with_deps_sync(const nlohmann::basic_json<> &entry, const std::string& guid, const std::string& name) {
+    std::vector<std::pair<std::string, HMODULE>> loaded_mods;
+
+    for(const auto& dependency : entry["dependencies"]) {
+        if(loaded_mods_by_guid.contains(dependency)) continue;
+
+        // Get the dependency entry
+        const auto& mod_array = manifest["games"][game_type_to_string(japi::get_instance().get_game_type())];
+
+        // Find the dependency entry
+        const auto it = std::find_if(mod_array.begin(), mod_array.end(), [&dependency](const nlohmann::json& entry) {
+            return entry["guid"] == dependency;
+        });
+
+        // If the dependency entry is not found, skip it
+        if(it == mod_array.end()) {
+            LOG_ERROR(MODLOADER_GUID, "Failed to find dependency %s", dependency.get<std::string>().c_str());
+            continue;
+        }
+
+        // Download the dependency
+        HMODULE mod;
+        if(!grab_and_load_mod_from_manifest(*it, &mod)) {
+            LOG_ERROR(MODLOADER_GUID, "Failed to download mod %s", dependency.get<std::string>().c_str());
+        }
+
+        // Add the mod to the loaded mods
+        if((*it)["lazy_load"]) loaded_mods.emplace_back(dependency, mod);
+    }
+
+    // Load the main mod
+    HMODULE mod;
+    if(!grab_and_load_mod_from_manifest(entry, &mod)) {
+        LOG_ERROR(MODLOADER_GUID, "Failed to download mod %s", name.c_str());
+    }
+
+    if(entry["lazy_load"]) loaded_mods.emplace_back(guid, mod);
+
+    // Lazy-load everything
+    for(const auto& [guid, mod] : loaded_mods) {
+        instance->lazy_load_mod(mod, guid.c_str());
+    }
+
+    LOG_INFO(MODLOADER_GUID, "Successfully downloaded the plugin! (You may need to reload the game to load it)");
+}
+
+void mod_manager::download_mod_with_deps_async(const nlohmann::basic_json<> &entry, const std::string& guid, const std::string& name) {
+    // Set the `is_downloading` flag
+    {
+        std::lock_guard<std::mutex> lock(download_mutex);
+        is_downloading = true;
+    }
+
+    // Create a thread for downloading
+    std::thread([&]() {
+        download_mod_with_deps_sync(entry, guid, name);
+
+        // Unset the `is_downloading` flag
+        {
+            std::lock_guard<std::mutex> lock(download_mutex);
+            is_downloading = false;
+        }
+    }).detach();
+}
+
 void mod_manager::draw_imgui_mods_tab() {
+    {
+        // Try to access `is_downloading` && `currently_downloading`
+        std::lock_guard<std::mutex> lock(download_mutex);
+
+        if(is_downloading) {
+            ImGui::Text("Downloading: %s", currently_downloading.c_str());
+            return;
+        }
+    }
+
     if(ImGui::TreeNode("Loaded Plugins")) {
         for(auto const& [mod, meta] : loaded_mods) {
             if(ImGui::TreeNode(meta.name)) {
@@ -214,7 +329,7 @@ void mod_manager::draw_imgui_mods_tab() {
             // Get guid
             const std::string guid = entry["guid"];
 
-            if(loaded_mods_by_guid.contains(guid)) continue;
+            if(loaded_mods_by_guid.contains(guid) || downloaded_mods.contains(guid)) continue;
 
             // Get name
             const std::string name = entry["name"];
@@ -226,51 +341,7 @@ void mod_manager::draw_imgui_mods_tab() {
                 ImGui::TextLinkOpenURL("Source Code", entry["source_url"].get<std::string>().c_str());
 
                 if(ImGui::Button("Download (with dependencies)")) {
-                    std::vector<std::pair<std::string, HMODULE>> loaded_mods;
-
-                    for(const auto& dependency : entry["dependencies"]) {
-                        if(loaded_mods_by_guid.contains(dependency)) continue;
-
-                        // Get the dependency entry
-                        const auto& mod_array = manifest["games"][game_type_to_string(japi::get_instance().get_game_type())];
-
-                        // Find the dependency entry
-                        const auto it = std::find_if(mod_array.begin(), mod_array.end(), [&dependency](const nlohmann::json& entry) {
-                            return entry["guid"] == dependency;
-                        });
-
-                        // If the dependency entry is not found, skip it
-                        if(it == mod_array.end()) {
-                            LOG_ERROR(MODLOADER_GUID, "Failed to find dependency %s", dependency.get<std::string>().c_str());
-                            continue;
-                        }
-
-                        // Download the dependency
-                        HMODULE mod;
-                        if(!grab_and_load_mod_from_manifest(*it, &mod)) {
-                            LOG_ERROR(MODLOADER_GUID, "Failed to download mod %s", dependency.get<std::string>().c_str());
-                        }
-
-                        // Add the mod to the loaded mods
-                        if((*it)["lazy_load"]) loaded_mods.emplace_back(dependency, mod);
-                    }
-
-                    // Load the main mod
-                    HMODULE mod;
-                    if(!grab_and_load_mod_from_manifest(entry, &mod)) {
-                        LOG_ERROR(MODLOADER_GUID, "Failed to download mod %s", name.c_str());
-                        // ui::popup::open("Download Failed", "Failed to download the plugin.");
-                    }
-
-                    if(entry["lazy_load"]) loaded_mods.emplace_back(guid, mod);
-
-                    // Lazy-load everything
-                    for(const auto& [guid, mod] : loaded_mods) {
-                        instance->lazy_load_mod(mod, guid.c_str());
-                    }
-
-                    LOG_INFO(MODLOADER_GUID, "Successfully downloaded the plugin! (You may need to restart the game to load it)");
-                    // ui::popup::open("Download Success", "Successfully downloaded the plugin! (You may need to restart the game to load it)");
+                    download_mod_with_deps_async(entry, guid, name);
                 }
 
                 ImGui::TreePop();
@@ -278,6 +349,10 @@ void mod_manager::draw_imgui_mods_tab() {
         }
 
         ImGui::TreePop();
+    }
+
+    if(ImGui::Button("Reload Game")) {
+        reloader::reload_game();
     }
 }
 
@@ -324,6 +399,18 @@ bool mod_manager::grab_and_load_mod_from_manifest(const nlohmann::basic_json<> &
     std::string name = entry["name"];
     std::string url = entry["url"];
 
+    // Check if the mod is already downloaded
+    if(downloaded_mods.contains(guid)) {
+        LOG_TRACE(MODLOADER_GUID, "Mod %s is already downloaded", name.c_str());
+        return false;
+    }
+
+    {
+        // Set the `currently_downloading` variable
+        std::lock_guard<std::mutex> lock(download_mutex);
+        currently_downloading = name;
+    }
+
     std::vector<uint8_t> buffer = downloader::download_file(url);
     if(buffer.empty()) {
         LOG_ERROR(MODLOADER_GUID, "Failed to download mod %s", name.c_str());
@@ -341,6 +428,8 @@ bool mod_manager::grab_and_load_mod_from_manifest(const nlohmann::basic_json<> &
     // Write the buffer to the file
     file.write(reinterpret_cast<const char*>(buffer.data()), buffer.size());
     file.close();
+
+    downloaded_mods.insert(guid); // Add the mod to the downloaded mods
 
     HMODULE mod = LoadLibraryA(("japi/plugins/" + guid + ".dll").c_str());
     if (mod == nullptr) {

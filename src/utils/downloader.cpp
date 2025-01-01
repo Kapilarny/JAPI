@@ -5,10 +5,19 @@
 #include "downloader.h"
 
 #include <filesystem>
+#include <thread>
 #include <windows.h>
 #include <winhttp.h>
 
 #include "logger.h"
+
+void downloader::download_file_async(const std::string& url, DownloadCallback callback, void* user_data) {
+    // Open a new thread to download the file
+    std::thread([url, callback, user_data]() {
+        std::vector<uint8_t> buffer = download_file(url);
+        callback(buffer, user_data);
+    }).detach();
+}
 
 bool downloader::is_404(std::vector<uint8_t>& buffer) {
     return buffer.size() == 15; // This is so fucking stupid i love this

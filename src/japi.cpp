@@ -31,6 +31,17 @@ void japi::initialize(HINSTANCE dll_h_inst) {
         freopen_s(&file, "CONOUT$", "w", stdout);
     }
 
+    if(!instance->japi_cfg.bind<bool>("asked_for_default_plugins", false)) {
+        // Create a message box
+        auto result = MessageBoxA(nullptr, "Would you like to install game-specific default plugins?", "JoJoAPI", MB_YESNO | MB_ICONQUESTION);
+
+        if(result == IDYES) {
+            instance->download_default_plugins = true;
+        }
+
+        instance->japi_cfg.set("asked_for_default_plugins", true);
+    }
+
     JINFO("Loaded JAPI v%s (game_type %s)", JAPI_VERSION, game_type_to_string(instance->type).c_str());
 
     // Init MinHook
