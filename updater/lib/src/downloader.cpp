@@ -48,6 +48,8 @@ std::vector<std::string> GetLatestJAPIDlls() {
         dll += *it;
     }
 
+    if(!dll.empty()) dlls.push_back(dll);
+
     return dlls;
 }
 
