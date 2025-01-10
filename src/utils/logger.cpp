@@ -1,4 +1,4 @@
-#include "Logger.h"
+#include "logger.h"
 
 #include <Windows.h>
 #include <string>
@@ -13,8 +13,8 @@ static std::ofstream logFile;
 void LogOutputVaList(LogLevel level, const std::string& message, const std::string& pluginGUID, va_list args) {
     static const std::string level_strings[6] = { "[FATAL]: ", "[ERROR]: ", "[WARN]: ", "[INFO]: ", "[DEBUG]: ", "[TRACE]: " };
     bool isError = level < 2;
-    
-    char* buffer = new char[10000]; // 10k is more than enough
+
+    char buffer[10000];
 
     // Format the string and store it in the buffer
     vsnprintf(buffer, 10000, message.c_str(), args);
@@ -41,7 +41,7 @@ void LogOutputVaList(LogLevel level, const std::string& message, const std::stri
     LPDWORD number_written = 0;
     WriteConsoleA(GetStdHandle(STD_OUTPUT_HANDLE), finalMessage.c_str(), (DWORD)length, number_written, 0);
 
-    delete[] buffer;
+    // delete[] buffer;
 }
 
 void LogOutputWithFmt(LogLevel level, const std::string& message, const std::string& pluginGUID, ...) {

@@ -32,7 +32,7 @@ LRESULT CALLBACK hkWindowProc(
     // JAPI Handler
     {
         HWNDCallbackEvent event{hwnd, uMsg, wParam, lParam};
-        auto result = EventTransmitter::TransmitEventCancellable("HWNDCallbackEvent", &event);
+        auto result = event_transmitter::transmit_event_cancellable("HWNDCallbackEvent", &event);
 
         if(result) {
             return 0;
@@ -46,7 +46,7 @@ LRESULT CALLBACK hkWindowProc(
         case WM_KEYDOWN: {
             KeyboardEvent event{ wParam, (ButtonState)uMsg };
 
-            EventTransmitter::TransmitEvent("KeyboardEvent", &event);
+            event_transmitter::transmit_event("KeyboardEvent", &event);
         } break;
 
         default: break;

@@ -9,7 +9,7 @@ GameData::GameData() {
         JINFO("Detected ASBR.exe, assuming ASBR");
 
         this->game_type = GameType::ASBR;
-        this->game_file = "ASBR.exe";
+        this->game_file = "ASBR.exe.unpacked.exe";
         this->steam_appid = "1372110";
     } else if(std::filesystem::exists("NSUNSC.exe")) {
         JINFO("Detected NSUNSC.exe, assuming Connections");

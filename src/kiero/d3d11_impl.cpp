@@ -1,6 +1,8 @@
 #include "japi.h"
 #include "kiero.h"
 #include "events/event.h"
+#include "mods/mod_manager.h"
+#include "utils/hooks.h"
 #include "utils/logger.h"
 
 #if KIERO_INCLUDE_D3D11
@@ -19,6 +21,21 @@ typedef long(__stdcall* Present)(IDXGISwapChain*, UINT, UINT);
 static Present oPresent = NULL;
 
 static bool shouldWindowBeOpen = true;
+
+typedef UINT (__stdcall *GetRawInputData_t)(HRAWINPUT hRawInput, UINT uiCommand, LPVOID pData, PUINT pcbSize, UINT cbSizeHeader);
+GetRawInputData_t oGetRawInputData = nullptr;
+
+UINT __stdcall hkGetRawInputData(HRAWINPUT hRawInput, UINT uiCommand, LPVOID pData, PUINT pcbSize, UINT cbSizeHeader)
+{
+	auto result = oGetRawInputData(hRawInput, uiCommand, pData, pcbSize, cbSizeHeader);
+
+	// Check if we should block the input because of ImGUI
+	if(ImGui::GetIO().WantCaptureMouse || ImGui::GetIO().WantCaptureKeyboard) {
+		return 0;
+	}
+
+	return result;
+}
 
 ImVec4 HSVtoRGB(float h, float s, float v)
 {
@@ -49,55 +66,8 @@ void imgui_update() {
 
 	if(ImGui::BeginTabBar("tabs")) {
 		if(ImGui::BeginTabItem("Mods")) {
-			auto mods = JAPI::GetMods();
-
-			for(auto mod : mods) {
-				if(ImGui::CollapsingHeader(mod.meta.name)) {
-					ImGui::Text("%s v%s", mod.meta.name, mod.meta.version);
-					ImGui::Text("Made by: %s", mod.meta.author);
-
-					ImGui::Spacing();
-
-					auto registered_config_data = JAPI::GetConfigData(mod.meta.guid);
-					for(const auto& [label, val] : registered_config_data.bools) {
-						ImGui::Checkbox(label.c_str(), val);
-					}
-
-					for(const auto& [label, val] : registered_config_data.ints) {
-						ImGui::InputInt(label.c_str(), val);
-					}
-
-					for(const auto& [label, val] : registered_config_data.strings) {
-						ImGui::InputText(label.c_str(), val, 255);
-					}
-
-					for(const auto& [label, val] : registered_config_data.floats) {
-						ImGui::InputFloat(label.c_str(), val);
-					}
-
-					if(ImGui::Button("Save")) {
-						ModConfig config = GetModConfig(mod.meta.guid);
-
-						for(const auto& [label, val] : registered_config_data.bools) {
-							config.table.insert_or_assign(label, *val);
-						}
-
-						for(const auto& [label, val] : registered_config_data.ints) {
-							config.table.insert_or_assign(label, *val);
-						}
-
-						for(const auto& [label, val] : registered_config_data.strings) {
-							config.table.insert_or_assign(label, std::string(val));
-						}
-
-						for(const auto& [label, val] : registered_config_data.floats) {
-							config.table.insert_or_assign(label, *val);
-						}
-
-						SaveConfig(config);
-					}
-				}
-			}
+			// TODO: Implement mods tab
+			mod_manager::get_instance()->draw_imgui_mods_tab();
 
 			ImGui::EndTabItem();
 		}
@@ -105,7 +75,7 @@ void imgui_update() {
 		if(ImGui::BeginTabItem("Credits")) {
 			ImGui::Text("Build: " __DATE__ " || " __TIME__);
 
-			ImGui::TextColored(GetChromaColor(), "JAPI v%s || Made by Kapilarny :)", JAPI::GetJAPIVersionString().c_str());
+			ImGui::TextColored(GetChromaColor(), "JAPI v%s || Made by Kapilarny :)", JAPI_VERSION);
 			ImGui::Spacing();
 
 			ImGui::Text("Huge thanks to: ");
@@ -122,7 +92,7 @@ void imgui_update() {
 	}
 
 	ImGUIRenderEvent e{};
-	EventTransmitter::TransmitEvent("ImGUIRenderEvent", &e);
+	event_transmitter::transmit_event("ImGUIRenderEvent", &e);
 
 	ImGui::End();
 
@@ -168,14 +138,27 @@ long __stdcall hkPresent11(IDXGISwapChain* pSwapChain, UINT SyncInterval, UINT F
 }
 
 void toggle_imgui_window() {
-	JTRACE("Toggling imgui window!");
+	// JTRACE("Toggling imgui window!");
 	shouldWindowBeOpen = !shouldWindowBeOpen;
 }
 
 void init_d3d11_hooks()
 {
-	JTRACE("Hooking d3d11!");
+	// JTRACE("Hooking d3d11!");
 	assert(kiero::bind(8, (void**)&oPresent, (void*)hkPresent11) == kiero::Status::Success);
+
+	// Hook GetRawInputData
+	HMODULE hUser32 = GetModuleHandleA("user32.dll");
+	oGetRawInputData = (GetRawInputData_t)GetProcAddress(hUser32, "GetRawInputData");
+
+	JAPIHook hook = {
+		.target = (uint64_t)oGetRawInputData,
+		.detour = (void*)hkGetRawInputData,
+		.original = (void*)&oGetRawInputData,
+		.name = "GetRawInputData"
+	};
+
+	hooks::hook_function(hook);
 }
 
 #endif // KIERO_INCLUDE_D3D11

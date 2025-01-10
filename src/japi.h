@@ -1,46 +1,45 @@
-#pragma once
+//
+// Created by user on 27.12.2024.
+//
 
+#ifndef JAPI_H
+#define JAPI_H
+
+#define JAPI_VERSION "3.1.0"
+
+#include <Windows.h>
 #include <memory>
-#include <unordered_map>
-#include <vector>
 
-#include "mod.h"
 #include "utils/config.h"
-#include "utils/game_data.h"
+#include "utils/game_type.h"
 
-class JAPI {
+class japi {
 public:
-    static void Init(HINSTANCE hinstDLL);
-    static void InitThread(HINSTANCE hinstDLL);
+    static void initialize(HINSTANCE h_inst);
+    static void run_thread(HINSTANCE h_inst);
 
-    static uint64_t GetASBRModuleBase();
+    static japi& get_instance() { return *instance; }
 
-    static size_t GetASBRModuleSize();
-    static std::string GetModGUID(HANDLE modHandle);
-    static GameData& GetGameData();
+    [[nodiscard]] uint64_t get_module_base() const { return module_base; }
+    [[nodiscard]] uint64_t get_module_size() const { return module_size; }
 
-    static std::string GetJAPIVersionString() { return "3.0.3"; }
-    static const std::vector<ModData>& GetMods() { return instance->mods; }
-    static std::unordered_map<std::string, RegisteredConfigData>& GetRegisteredDataMap() { return instance->mod_registered_data; }
-    static RegisteredConfigData GetConfigData(const std::string& guid) { return instance->mod_registered_data[guid]; }
+    [[nodiscard]] game_type get_game_type() const { return type; }
+
+    [[nodiscard]] bool should_download_default_plugins() const { return download_default_plugins; }
 private:
-    JAPI() = default;
+    japi() = default;
 
-    void LoadMods();
-    void LoadDllPlugins();
-    void LoadLuaPlugins();
+    void find_game_type();
 
-    GameData gameData;
+    static inline std::unique_ptr<japi> instance;
+    HINSTANCE h_inst{};
+    uint64_t module_base{};
+    uint64_t module_size{};
 
-    uint64_t asbrModuleBase{};
-    HINSTANCE hinstDLL{};
-    size_t dwSize{};
+    game_type type = game_type::UNKNOWN;
 
-    ModConfig japiConfig;
-    ModConfig pluginLoaderConfig;
-    
-    std::vector<ModData> mods;
-    std::unordered_map<std::string, RegisteredConfigData> mod_registered_data;
-
-    static inline std::unique_ptr<JAPI> instance;    
+    config japi_cfg = config::load_mod_config("JAPI");
+    bool download_default_plugins = false;
 };
+
+#endif //JAPI_H

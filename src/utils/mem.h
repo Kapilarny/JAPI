@@ -1,4 +1,9 @@
-#pragma once
+//
+// Created by user on 27.12.2024.
+//
+
+#ifndef MEM_H
+#define MEM_H
 
 #include <Windows.h>
 #include <stdint.h>
@@ -7,23 +12,6 @@
 #include <stdio.h>
 
 #define GAME_SCAN(sig) (uint64_t) PatternScan(GetModuleHandle(nullptr), sig)
-
-inline void PatchEx(BYTE* dst, BYTE* src, unsigned int size) {
-	DWORD oldprotect;
-	VirtualProtect(dst, size, PAGE_EXECUTE_READWRITE, &oldprotect);
-	memcpy(dst, src, size);
-	VirtualProtect(dst, size, oldprotect, &oldprotect);
-}
-
-inline bool MemoryCompare(const BYTE* data, const BYTE* mask, const char* szMask) {
-	for (; *szMask; ++szMask, ++data, ++mask) {
-		if (*szMask == 'x' && *data != *mask) {
-			return false;
-		}
-	}
-
-	return (*szMask == 0);
-}
 
 // I stole this code from UC, credits to whoever made it
 /*
@@ -78,3 +66,5 @@ inline std::uint8_t* PatternScan(void* module, const char* signature)
     }
     return nullptr;
 }
+
+#endif //MEM_H

@@ -1,3 +1,10 @@
+//
+// Created by user on 27.12.2024.
+//
+
+#ifndef EVENT_H
+#define EVENT_H
+
 #pragma once
 
 #include <string>
@@ -6,20 +13,20 @@
 #include <vector>
 #include <sol.hpp>
 
-#include "../exports/JojoAPI.h"
+#include "exports/JAPIEvents.h"
 
-class EventTransmitter {
+class event_transmitter {
 public:
-    static void Init();
+    static void init();
 
-    static void TransmitEvent(std::string eventName, void* data);
-    static bool TransmitEventCancellable(std::string eventName, void* data);
+    static void transmit_event(const std::string &eventName, void* data);
+    static bool transmit_event_cancellable(const std::string &eventName, void* data);
 
-    static void RegisterCallback(std::string eventName, EventCallback callback);
-    static void RegisterLuaCallback(std::string eventName, sol::function callback);
+    static void register_callback(const std::string &eventName, EventCallback callback);
 private:
-    static inline std::unique_ptr<EventTransmitter> instance;
+    static inline std::unique_ptr<event_transmitter> instance;
 
-    std::unordered_map<std::string, std::vector<EventCallback>> cppEventCallbacks;
-    std::unordered_map<std::string, std::vector<sol::function>> luaEventCallbacks;
+    std::unordered_map<std::string, std::vector<EventCallback>> cpp_event_callbacks;
 };
+
+#endif //EVENT_H

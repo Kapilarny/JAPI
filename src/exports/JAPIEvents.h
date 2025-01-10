@@ -1,7 +1,3 @@
-//
-// Created by user on 31.08.2024.
-//
-
 #ifndef JAPIEVENTS_H
 #define JAPIEVENTS_H
 
@@ -31,6 +27,11 @@ struct HWNDCallbackEvent {
 
 // "ImGUIRenderEvent"
 struct ImGUIRenderEvent {
+    /* No Data */
+};
+
+// "JAPILateInitEvent"
+struct JAPILateInitEvent {
     /* No Data */
 };
 

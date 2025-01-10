@@ -1,215 +1,108 @@
+//
+// Created by user on 27.12.2024.
+//
+
 #include "japi.h"
 
-#include <Windows.h>
-#include <tlhelp32.h>
-#include <psapi.h>
-
-#include <filesystem>
+#include <imgui.h>
 #include <MinHook.h>
 
+#include <Windows.h>
+#include <psapi.h>
+
 #include "events/event.h"
-#include "utils/logger.h"
-#include "utils/cpk.h"
-#include "exports/JojoAPI.h"
 #include "kiero/d3d11_impl.h"
 #include "kiero/kiero.h"
-#include "lua/script.h"
-// #include "lua/asm.h"
+#include "mods/mod_manager.h"
+#include "utils/logger.h"
 
-void JAPI::Init(HINSTANCE hinstDLL) {
-    instance = std::unique_ptr<JAPI>(new JAPI());
-    instance->hinstDLL = hinstDLL;
-    instance->asbrModuleBase = (uint64_t) GetModuleHandle(NULL);
+void japi::initialize(HINSTANCE dll_h_inst) {
+    instance = std::unique_ptr<japi>(new japi());
+    instance->h_inst = GetModuleHandle(NULL);
+    instance->module_base = (uint64_t) GetModuleHandle(NULL);
 
-    // Load config
-    instance->japiConfig = GetModConfig("JAPI");
-    instance->pluginLoaderConfig = GetModConfig("PluginLoader");
-    bool shouldSpawnConsole = ConfigBind<bool>(instance->japiConfig.table, "spawn_console", true);
-    SaveConfig(instance->japiConfig);
-    if(shouldSpawnConsole) {
+    instance->find_game_type();
+
+    // Check if we should enable debug console
+    if (instance->japi_cfg.bind<bool>("spawn_console", false)) {
         AllocConsole();
-        SetConsoleTitle("JojoAPI Console");
+        SetConsoleTitle("JoJoAPI Console");
         FILE* file = nullptr;
         freopen_s(&file, "CONOUT$", "w", stdout);
-        freopen_s(&file, "CONIN$", "r", stdin);
     }
 
-    // Load GameData
-    instance->gameData = GameData();
+    if(!instance->japi_cfg.bind<bool>("asked_for_default_plugins", false)) {
+        // Create a message box
+        auto result = MessageBoxA(nullptr, "Would you like to install game-specific default plugins?", "JoJoAPI", MB_YESNO | MB_ICONQUESTION);
 
-    if(MH_Initialize() != MH_OK) {
-        JERROR("Failed to initialize MinHook!");
+        if(result == IDYES) {
+            instance->download_default_plugins = true;
+        }
+
+        instance->japi_cfg.set("asked_for_default_plugins", true);
+    }
+
+    JINFO("Loaded JAPI v%s (game_type %s)", JAPI_VERSION, game_type_to_string(instance->type).c_str());
+
+    // Init MinHook
+    if (MH_Initialize() != MH_OK) {
+        JFATAL("Failed to initialize MinHook");
         return;
     }
 
+    // Get the module size
     MODULEINFO info;
     GetModuleInformation(GetCurrentProcess(), GetModuleHandleA(0), &info, sizeof(MODULEINFO));
-    instance->dwSize = info.SizeOfImage;
+    instance->module_size = info.SizeOfImage;
 
-    EventTransmitter::Init();
-    ScriptManager::Init();
+    // Init events
+    event_transmitter::init();
+    mod_manager::init();
 
-    // input_hook_apply();
-
-    JINFO("Initialized JojoAPI!");
-    instance->LoadMods();
+    JINFO("Initialized JoJoAPI!");
 }
 
-void JAPI::InitThread(HINSTANCE hInstDll) {
+void japi::run_thread(HINSTANCE h_inst) {
     // Load kiero
     auto result = kiero::init(kiero::RenderType::D3D11);
-    if(result != kiero::Status::Success) {
-        JFATAL("Kiero failed to initialize for D3D11! Error: %d", result);
-    } else {
-        JTRACE("Kiero initialized properly!");
+    if (result != kiero::Status::Success) {
+        JFATAL("Failed to initialize D3D11 hooks! (%d)", result);
+        return;
     }
 
-    // Run d3d11 impl
     init_d3d11_hooks();
 
-    // For now janky loop
-    while(true) {
-        ScriptManager::ExecuteScripts();
-        Sleep(1000);
-    }
+    JAPILateInitEvent e{};
+    event_transmitter::transmit_event("JAPILateInitEvent", &e);
+
+    // some update loop could be here, but we don't need it for now
 }
 
-size_t JAPI::GetASBRModuleSize() {
-    return instance->dwSize;
+void japi::find_game_type() {
+    // Get executable path
+    char path[MAX_PATH];
+    GetModuleFileName(instance->h_inst, path, MAX_PATH);
+
+    // Extract name of the module
+    char* module_name = strrchr(path, '\\') + 1;
+
+    // Extract name of the module without extension
+    char* module_name_no_ext = strtok(module_name, ".");
+
+    type = string_to_game_type(module_name_no_ext);
 }
 
-uint64_t JAPI::GetASBRModuleBase() {
-    return instance->asbrModuleBase;
-}
+BOOL WINAPI DllMain(HINSTANCE hinstDLL, DWORD fdwReason, LPVOID lpvReserved) {
+    switch (fdwReason) {
+        case DLL_PROCESS_ATTACH:
+            japi::initialize(hinstDLL);
 
-void JAPI::LoadMods() {
-    if(!std::filesystem::exists("japi")) {
-        std::filesystem::create_directory("japi");
-    }
-
-    if(!std::filesystem::exists("japi\\dll-plugins")) {
-        std::filesystem::create_directory("japi\\dll-plugins");
-    }
-
-    if(!std::filesystem::exists("japi\\lua-plugins")) {
-        std::filesystem::create_directory("japi\\lua-plugins");
-    }
-
-    if(!std::filesystem::exists("japi\\cpks")) {
-        std::filesystem::create_directory("japi\\cpks");
-    }
-
-    if(std::filesystem::exists("japi\\mods")) {
-        for(auto& p : std::filesystem::directory_iterator("japi\\mods")) {
-            if(p.path().extension() == ".dll") {
-                LOG_WARN("PluginLoader", "Please move your plugins from japi\\mods to japi\\dll-plugins!");
-                LOG_WARN("PluginLoader", "This error message will be removed in a future version!");
-                break;
-            }
-        }
-    }
-
-    if(std::filesystem::exists("japi\\luamods")) {
-        for(auto& p : std::filesystem::directory_iterator("japi\\luamods")) {
-            if(p.path().extension() == ".lua") {
-                LOG_WARN("PluginLoader", "Please move your plugins from japi\\luamods to japi\\lua-plugins!");
-                LOG_WARN("PluginLoader", "This error message will be removed in a future version!");
-                break;
-            }
-        }
-    }
-
-    bool shouldLoadCpkMods = ConfigBind<bool>(instance->pluginLoaderConfig.table, "load_cpk_mods", true);
-    bool shouldLoadDllPlugins = ConfigBind<bool>(instance->pluginLoaderConfig.table, "load_dll_plugins", true);
-    bool shouldLoadLuaPlugins = ConfigBind<bool>(instance->pluginLoaderConfig.table, "load_lua_plugins", true);
-    SaveConfig(instance->pluginLoaderConfig);
-
-    // Load CPK mods
-    if(shouldLoadCpkMods) {
-        LoadCPKMods();
-    } else {
-        LOG_TRACE("PluginLoader", "Not loading CPK mods! (disabled)");
-    }
-
-    if(shouldLoadDllPlugins) {
-        LoadDllPlugins();
-    } else {
-        LOG_TRACE("PluginLoader", "Not loading DLL plugins! (disabled)");
-    }
-
-    if(shouldLoadLuaPlugins) {
-        LoadLuaPlugins();
-    } else {
-        LOG_TRACE("PluginLoader", "Not loading Lua plugins! (disabled)");
-    }
-
-    LOG_INFO("PluginLoader", "Loaded " + std::to_string(mods.size()) + " plugin(s)!");
-}
-
-std::string JAPI::GetModGUID(HANDLE modHandle) {
-    for(auto& mod : instance->mods) {
-        if(mod.handle == modHandle) {
-            return mod.meta.guid;
-        }
-    }
-
-    return "";
-}
-
-GameData& JAPI::GetGameData() {
-    return instance->gameData;
-}
-
-void JAPI::LoadDllPlugins() {
-    for(auto& p : std::filesystem::directory_iterator("japi\\dll-plugins")) {
-        if(p.path().extension() == ".dll") {
-            std::string name = p.path().filename().string();
-
-            if(name[0] == '-') {
-                LOG_TRACE("PluginLoader", "Skipping plugin: %s! (disabled)", name.c_str());
-                continue;
+            const HANDLE thread = CreateThread(nullptr, 0, (LPTHREAD_START_ROUTINE) japi::run_thread, hinstDLL, 0, nullptr);
+            if (thread) {
+                CloseHandle(thread);
             }
 
-            // Load the DLL
-            auto handle = LoadLibrary(p.path().string().c_str());
-            if(!handle) {
-                LOG_ERROR("PluginLoader", "Failed to load plugin " + p.path().string());
-                continue;
-            }
-
-            // Get the mod info
-            auto getModInfo = (ModMeta (*)()) GetProcAddress(handle, "GetModInfo");
-            if(!getModInfo) {
-                LOG_ERROR("PluginLoader", "Failed to get plugin info for " + p.path().string());
-                continue;
-            }
-
-            ModMeta modInfo = getModInfo();
-            auto modInit = (void (*)()) GetProcAddress(handle, "ModInit");
-            if(!modInit) {
-                LOG_ERROR("PluginLoader", "Failed to get plugin init for " + p.path().string());
-                continue;
-            }
-
-            modInit();
-
-            mods.push_back({modInfo, handle});
-        }
+            break;
     }
-}
-
-void JAPI::LoadLuaPlugins() {
-    for(auto& p : std::filesystem::directory_iterator("japi\\lua-plugins")) {
-        // Get mod filename
-        std::string name = p.path().filename().string();
-
-        if(name[0] == '-') {
-            continue;
-        }
-
-        if(p.path().extension() == ".lua") {
-            LOG_INFO("PluginLoader", "Loading Lua plugin " + p.path().string());
-            ScriptManager::AddFileToWatch(p.path().string());
-        }
-    }
+    return TRUE;
 }
