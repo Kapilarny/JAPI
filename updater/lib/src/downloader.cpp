@@ -224,9 +224,6 @@ uint16_t DownloadASBR() {
 
     JINFO("ASBR.exe updated!");
 
-    // Copy ASBR.exe to ASBR.exe.unpacked.exe
-    std::filesystem::copy("ASBR.exe", "ASBR.exe.unpacked.exe");
-
     return new_hash;
 }
 

@@ -205,27 +205,6 @@ void mod_manager::load_mods() {
     }
 }
 
-// manifest.json
-/*
- * {
- *   "manifest_version": 1,
- *   "games": {
- *      "ASBR": [
- *          {
- *              "name": "Test Mod",
- *              "guid": "TestMod",
- *              "author": "Kapilarny"
- *              "version": "1.0.0",
- *              "description": "This is a test mod",
- *              "url": "...",
- *              "dependencies": ["AnotherMod"]
- *          }
- *      ],
- *      "NSUNSC": [...]
- *   }
- * }
- */
-
 void mod_manager::download_mod_with_deps_sync(const nlohmann::basic_json<> &entry, const std::string& guid, const std::string& name) {
     std::vector<std::pair<std::string, HMODULE>> loaded_mods;
 
