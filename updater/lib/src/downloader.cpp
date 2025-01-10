@@ -52,9 +52,7 @@ std::vector<std::string> GetLatestJAPIDlls() {
 }
 
 bool Is404(std::vector<uint8_t>& buffer) {
-    std::string str(buffer.begin(), buffer.end());
-
-    return str.find("404: Not Found") != std::string::npos;
+    return buffer.size() == 15 && strcmp((const char*)buffer.data(), "404: Not Found") == 0;
 }
 
 std::vector<uint8_t> DownloadFile(std::string url) {
