@@ -49,6 +49,13 @@ int UpdaterMain() {
     bool open_console = ConfigBind(updater_config, "open_console", true);
     bool first_run = ConfigBind(updater_config, "first_run", true);
 
+    std::string target_executable = ConfigBind(updater_config, "target_executable", "");
+
+    if(!target_executable.empty()) {
+        JINFO("Target executable: " + target_executable);
+        GetGameData().game_file = target_executable;
+    }
+
     SetShouldLogToConsole(open_console);
 
     if(open_console) {
