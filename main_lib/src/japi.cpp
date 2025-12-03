@@ -22,7 +22,6 @@ japi::japi() : japi_cfg(config::load("japi/config/JAPI.cfg")){
     module_base = GetModuleHandleA(nullptr);
 
     hook_manager::init();
-    modloader::init();
 }
 
 // ReSharper disable once CppMemberFunctionMayBeStatic
@@ -57,4 +56,6 @@ void japi::initialize(HMODULE h_module) {
     }
 
     instance = std::unique_ptr<japi>(new japi());
+
+    modloader::init(); // Must be after japi instance creation
 }

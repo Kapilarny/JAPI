@@ -7,6 +7,7 @@
 
 #include <string>
 #include <unordered_map>
+#include <unordered_set>
 #include <windows.h>
 #include <vector>
 
@@ -34,13 +35,15 @@ public:
     static modloader& get();
 
     void load_mods();
+    static std::string get_mod_reserved_directory(const std::string& mod_guid);
 
     dll_mod_meta* get_mod_meta(HMODULE module);
 private:
     modloader() = default;
 
     void post_init();
-    void load_mod(const char* file);
+    void load_mod(const char* path, const char* filename);
+    void load_mod_dependencies(const char* path, const char* filename);
 
     // void preload_libraries();
     // void preload_library(const std::string& path);
@@ -48,6 +51,8 @@ private:
     std::vector<HMODULE> preloaded_libs;
     std::unordered_map<HMODULE, dll_mod_meta> loaded_mods;
     std::unordered_map<std::string, HMODULE> loaded_mods_by_guid;
+
+    std::unordered_set<std::string> load_chain_set;
 
     static inline std::unique_ptr<modloader> instance = nullptr;
 };

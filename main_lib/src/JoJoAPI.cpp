@@ -149,10 +149,8 @@ JAPIString* JAPI_GetPluginReservedDirectory() {
         JFATAL("Tried to get reserved directory for an unknown mod");
         return nullptr;
     }
-    std::string path = "japi/plugins/" + std::string(meta->guid) + "/";
-    if (!std::filesystem::exists(path)) {
-        std::filesystem::create_directories(path);
-    }
+
+    auto path = modloader::get_mod_reserved_directory(meta->guid);
 
     // Copy the string to a new memory location
     const auto copy = strdup(path.c_str());

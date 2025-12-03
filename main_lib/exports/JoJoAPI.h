@@ -194,6 +194,7 @@ JEXP void JAPI_TransmitEventCancellable(const char* event_name, void* event_data
 
 /**
  * Gets the directory reserved for the plugin.
+ * Returned directory is guaranteed to exist.
  * @return A JAPIString pointer containing the reserved directory path.
  * @warning Returned JAPIString pointer must be freed using JAPI_FreeString.
  */
