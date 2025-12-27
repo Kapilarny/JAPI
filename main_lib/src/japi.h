@@ -5,7 +5,10 @@
 #ifndef JAPI_JAPI_H
 #define JAPI_JAPI_H
 
+#define JAPI_VERSION "4.0.0"
+
 #include <memory>
+#include <functional>
 #include <windows.h>
 
 #include "subsystems/config.h"
@@ -18,7 +21,10 @@ public:
 
     static japi& get();
 
+    void register_post_init_callback(std::function<void()> cb);
+
     [[nodiscard]] HMODULE get_module_base() const { return module_base; }
+    [[nodiscard]] bool is_initialized() const { return fully_initialized; }
 private:
     japi();
 
@@ -26,8 +32,10 @@ private:
 
     static inline std::unique_ptr<japi> instance = nullptr;
 
+    std::vector<std::function<void()>> post_init_callbacks;
     config japi_cfg;
     HMODULE module_base;
+    bool fully_initialized = false;
 };
 
 #endif //JAPI_JAPI_H

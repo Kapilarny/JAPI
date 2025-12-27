@@ -5,6 +5,8 @@
 #ifndef JAPI_PRELOAD_GUI_H
 #define JAPI_PRELOAD_GUI_H
 #include <memory>
+#include <functional>
+#include <vector>
 
 class gui_manager {
 public:
@@ -12,12 +14,14 @@ public:
     static gui_manager& get();
 
     void update();
+    void register_tab_item(const std::string& item_name, const std::function<void()>& func);
 private:
     gui_manager();
 
-    static inline std::unique_ptr<gui_manager> instance = nullptr;
-
     void init_native_hooks(); // Defined in kiero/kiero_impl.cpp
+
+    static inline std::unique_ptr<gui_manager> instance = nullptr;
+    std::vector<std::pair<std::string,std::function<void()>>> registered_tab_items;
 };
 
 #endif //JAPI_PRELOAD_GUI_H

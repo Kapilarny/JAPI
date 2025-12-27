@@ -8,6 +8,7 @@
 
 #include <imgui.h>
 
+#include "subsystems/events.h"
 #include "subsystems/gui.h"
 #include "subsystems/hook.h"
 
@@ -21,12 +22,20 @@ japi::japi() : japi_cfg(config::load("japi/config/JAPI.cfg")){
 
     module_base = GetModuleHandleA(nullptr);
 
+    event_manager::init();
     hook_manager::init();
 }
 
 // ReSharper disable once CppMemberFunctionMayBeStatic
 void japi::run() { // NOLINT(*-convert-member-functions-to-static)
     gui_manager::init();
+
+    JINFO("Fully initialized!");
+    fully_initialized = true;
+    for (const auto& cb : post_init_callbacks) cb();
+
+    JAPILateInitEvent e{};
+    event_manager::get().transmit_event("JAPILateInitEvent", &e);
 }
 
 void japi::run_thread(HINSTANCE h_inst) {
@@ -46,6 +55,10 @@ japi& japi::get() {
     }
 
     return *instance;
+}
+
+void japi::register_post_init_callback(std::function<void()> cb) {
+    post_init_callbacks.emplace_back(std::move(cb));
 }
 
 void japi::initialize(HMODULE h_module) {

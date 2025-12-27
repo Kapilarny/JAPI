@@ -19,7 +19,7 @@ void event_manager::transmit_event(const std::string &event_name, void *event_da
     auto it = event_listeners.find(event_name);
 
     if (it == event_listeners.end()) {
-        JWARN("Trying to transmit event '%s' with no listeners!", event_name.c_str());
+        // JWARN("Trying to transmit event '%s' with no listeners!", event_name.c_str());
         return;
     }
 
@@ -31,7 +31,7 @@ void event_manager::transmit_event(const std::string &event_name, void *event_da
 bool event_manager::transmit_event_cancellable(const std::string &event_name, void *event_data) {
     auto it = cancellable_event_listeners.find(event_name);
     if (it == cancellable_event_listeners.end()) {
-        JWARN("Trying to transmit cancellable event '%s' with no listeners!", event_name.c_str());
+        // JWARN("Trying to transmit cancellable event '%s' with no listeners!", event_name.c_str());
         return false;
     }
 

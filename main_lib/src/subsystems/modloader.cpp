@@ -6,12 +6,36 @@
 
 #include <filesystem>
 #include <fstream>
+#include <ranges>
 
+#include "gui.h"
+#include "imgui.h"
+#include "japi.h"
 #include "JoJoAPI.h"
 #include "logger.h"
 
 void modloader::post_init() {
     load_mods();
+
+    japi::get().register_post_init_callback([this] {
+        gui_manager::get().register_tab_item("Loaded Plugins", [this] {
+            for (const auto &meta : loaded_mods | std::views::values) {
+                if(ImGui::TreeNode(meta.name)) {
+                    ImGui::Text("Author: %s", meta.author);
+                    ImGui::Text("Version: %s", meta.version);
+                    ImGui::Text("Description: %s", meta.description);
+
+                    if(meta.draw_imgui_func != nullptr) {
+                        ImGui::Separator();
+
+                        meta.draw_imgui_func();
+                    }
+
+                    ImGui::TreePop();
+                }
+            }
+        });
+    });
 }
 
 std::string modloader::get_mod_reserved_directory(const std::string &mod_guid) {

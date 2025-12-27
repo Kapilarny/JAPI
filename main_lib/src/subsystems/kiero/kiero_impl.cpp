@@ -8,6 +8,10 @@
 #include <imgui_impl_win32.h>
 #include <imgui_impl_dx11.h>
 
+#include "JAPIEvents.h"
+#include "subsystems/events.h"
+#include "subsystems/hook.h"
+
 static WNDPROC oWndProc = NULL;
 static bool shouldWindowBeOpen = true;
 
@@ -25,12 +29,12 @@ LRESULT CALLBACK hkWindowProc(
 
 	// JAPI Handler
 	{
-		// HWNDCallbackEvent event{hwnd, uMsg, wParam, lParam};
-		// auto result = event_transmitter::transmit_event_cancellable("HWNDCallbackEvent", &event);
+		HWNDCallbackEvent event{hwnd, uMsg, wParam, lParam};
+		auto result = event_manager::get().transmit_event_cancellable("HWNDCallbackEvent", &event);
 
-		// if(result) {
-			// return 0;
-		// }
+		if(result) {
+			return 0;
+		}
 	}
 
 	if(uMsg == WM_KEYUP && wParam == VK_F1) shouldWindowBeOpen = !shouldWindowBeOpen;
@@ -38,9 +42,9 @@ LRESULT CALLBACK hkWindowProc(
 	switch(uMsg) {
 		case WM_KEYUP:
 		case WM_KEYDOWN: {
-			// KeyboardEvent event{ wParam, (ButtonState)uMsg };
+			KeyboardEvent event{ wParam, (ButtonState)uMsg };
 
-			// event_transmitter::transmit_event("KeyboardEvent", &event);
+			event_manager::get().transmit_event_cancellable("KeyboardEvent", &event);
 		} break;
 
 		default: break;
@@ -109,4 +113,18 @@ long __stdcall hkPresent11(IDXGISwapChain* pSwapChain, UINT SyncInterval, UINT F
 
 void gui_manager::init_native_hooks() {
     ASSERT(kiero::bind(8, (void**)&oPresent, (void*)hkPresent11) == kiero::Status::Success, "Failed to bind Present hook!");
+
+	// Hook GetRawInputData
+	HMODULE hUser32 = LoadLibraryA("user32.dll");
+	oGetRawInputData = (GetRawInputData_t)GetProcAddress(hUser32, "GetRawInputData");
+
+	JAPIHookMeta h = {
+		.target = (uint64_t)oGetRawInputData,
+		.detour = (void*)hkGetRawInputData,
+		.original = &oGetRawInputData,
+		.name = "GetRawInputData",
+		.game_function = false
+	};
+
+	hook_manager::get().register_hook(h);
 }

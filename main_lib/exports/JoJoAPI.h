@@ -11,6 +11,7 @@
 
 // Keep the header C compatible
 #include <stdint.h> // NOLINT(*-deprecated-headers)
+#include "JAPIEvents.h"
 
 typedef struct JAPIModMeta {
     const char* name;
@@ -199,6 +200,14 @@ JEXP void JAPI_TransmitEventCancellable(const char* event_name, void* event_data
  * @warning Returned JAPIString pointer must be freed using JAPI_FreeString.
  */
 JEXP JAPIString* JAPI_GetPluginReservedDirectory();
+
+/**
+ * Registers a new GUI tab in the main JAPI window
+ * @note (Useful for mods with a lot of settings)
+ * @param title The title of the new GUI tab
+ * @param imgui_draw_callback function pointer to a function that should record proper imgui commands for the window
+ */
+JEXP void JAPI_RegisterGUITab(const char* title, void (*imgui_draw_callback)());
 
 /**
  * Frees a JAPIString allocated by JoJoAPI.

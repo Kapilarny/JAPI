@@ -8,6 +8,7 @@
 
 #include "japi.h"
 #include "subsystems/events.h"
+#include "subsystems/gui.h"
 #include "subsystems/hook.h"
 #include "subsystems/logger.h"
 #include "util/mem.h"
@@ -41,6 +42,62 @@ JAPIHookHandle JAPI_RegisterHook(JAPIHookMeta hook_meta) {
 
 bool JAPI_UnregisterHook(JAPIHookHandle hook_handle) {
     return hook_manager::get().unregister_hook(hook_handle);
+}
+
+void JAPI_RegisterEventListener(const char *event_name, JAPI_EventListener listener) {
+    event_manager::get().register_event_listener(event_name, listener);
+}
+
+void JAPI_RegisterCancellableEventListener(const char *event_name, JAPI_CancellableEventListener listener) {
+    event_manager::get().register_cancellable_event_listener(event_name, listener);
+}
+
+void JAPI_TransmitEvent(const char *event_name, void *event_data) {
+    event_manager::get().transmit_event(event_name, event_data);
+}
+
+void JAPI_TransmitEventCancellable(const char *event_name, void *event_data, bool *cancelled) {
+    *cancelled = event_manager::get().transmit_event_cancellable(event_name, event_data);
+}
+
+void JAPI_RegisterGUITab(const char *title, void (*imgui_draw_callback)()) {
+    auto closure = [=] {
+        gui_manager::get().register_tab_item(title, [=]{ imgui_draw_callback(); });
+    };
+
+    if (!japi::get().is_initialized()) {
+        japi::get().register_post_init_callback(closure);
+    } else {
+        closure();
+    }
+}
+
+JAPIString* JAPI_GetPluginReservedDirectory() {
+    const auto meta = GET_MOD_META();
+    if (!meta) {
+        JFATAL("Tried to get reserved directory for an unknown mod");
+        return nullptr;
+    }
+
+    auto path = modloader::get_mod_reserved_directory(meta->guid);
+
+    // Copy the string to a new memory location
+    const auto copy = strdup(path.c_str());
+    const auto result = new JAPIString(copy, path.size());
+    return result;
+}
+
+void JAPI_FreeString(JAPIString *japi_string) {
+    if (!japi_string) return;
+    free((char*)japi_string->data);
+    delete japi_string;
+}
+
+void JAPI_LogMessage(JAPI_LOG_LEVEL level, const char *message, ...) {
+    va_list args;
+    va_start(args, message);
+    log_output_va_list((LogLevel)level, message, GET_MOD_META() ? GET_MOD_META()->guid : "Unknown", args);
+    va_end(args);
 }
 
 JAPIString* JAPI_ConfigBindString(const char *key, const char *default_value) {
@@ -84,7 +141,7 @@ float JAPI_ConfigBindFloat(const char *key, float default_value) {
         return default_value;
     }
 
-    return meta->mod_config.bind<int>(key, default_value);
+    return meta->mod_config.bind(key, default_value);
 }
 
 void JAPI_ConfigSetString(const char *key, const char *value) {
@@ -125,48 +182,4 @@ void JAPI_ConfigSetFloat(const char *key, float value) {
     }
 
     meta->mod_config.set(key, value);
-}
-
-void JAPI_RegisterEventListener(const char *event_name, JAPI_EventListener listener) {
-    event_manager::get().register_event_listener(event_name, listener);
-}
-
-void JAPI_RegisterCancellableEventListener(const char *event_name, JAPI_CancellableEventListener listener) {
-    event_manager::get().register_cancellable_event_listener(event_name, listener);
-}
-
-void JAPI_TransmitEvent(const char *event_name, void *event_data) {
-    event_manager::get().transmit_event(event_name, event_data);
-}
-
-void JAPI_TransmitEventCancellable(const char *event_name, void *event_data, bool *cancelled) {
-    *cancelled = event_manager::get().transmit_event_cancellable(event_name, event_data);
-}
-
-JAPIString* JAPI_GetPluginReservedDirectory() {
-    const auto meta = GET_MOD_META();
-    if (!meta) {
-        JFATAL("Tried to get reserved directory for an unknown mod");
-        return nullptr;
-    }
-
-    auto path = modloader::get_mod_reserved_directory(meta->guid);
-
-    // Copy the string to a new memory location
-    const auto copy = strdup(path.c_str());
-    const auto result = new JAPIString(copy, path.size());
-    return result;
-}
-
-void JAPI_FreeString(JAPIString *japi_string) {
-    if (!japi_string) return;
-    free((char*)japi_string->data);
-    delete japi_string;
-}
-
-void JAPI_LogMessage(JAPI_LOG_LEVEL level, const char *message, ...) {
-    va_list args;
-    va_start(args, message);
-    log_output_va_list((LogLevel)level, message, GET_MOD_META() ? GET_MOD_META()->guid : "Unknown", args);
-    va_end(args);
 }
