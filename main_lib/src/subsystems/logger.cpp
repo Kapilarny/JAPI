@@ -24,7 +24,7 @@ void logger::spawn_console() {
     freopen_s((FILE **)stdout, "CONOUT$", "w", stdout);
 }
 
-void log_output_with_fmt(LogLevel level, const std::string &message, const std::string &plugin_guid, ...) {
+void log_output_with_fmt(LogLevel level, const std::string &message, std::string plugin_guid, ...) {
     va_list args;
     va_start(args, plugin_guid);
 
@@ -33,7 +33,7 @@ void log_output_with_fmt(LogLevel level, const std::string &message, const std::
     va_end(args);
 }
 
-void log_output_va_list(LogLevel level, const std::string &message, const std::string &plugin_guid, va_list args) {
+void log_output_va_list(LogLevel level, const std::string &message, const std::string &plugin_guid, const va_list args) {
     static const std::string level_strings[6] = { "[FATAL]: ", "[ERROR]: ", "[WARN]: ", "[INFO]: ", "[DEBUG]: ", "[TRACE]: " };
     bool isError = level < 2;
 

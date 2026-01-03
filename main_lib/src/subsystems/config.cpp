@@ -26,8 +26,9 @@ config config::load_mod_config(const std::string &mod_name) {
 config config::load(const std::string &path) {
     // Check if the file exists
     if(!std::filesystem::exists(path)) {
-        // Create directories
-        std::filesystem::create_directories(path);
+        // Create directories up to the last slash
+        std::filesystem::create_directories(std::filesystem::path(path).parent_path());
+
         return {path, toml::table()};
     }
 

@@ -94,9 +94,16 @@ void JAPI_FreeString(JAPIString *japi_string) {
 }
 
 void JAPI_LogMessage(JAPI_LOG_LEVEL level, const char *message, ...) {
+    const auto meta = GET_MOD_META();
+    if (!meta) {
+        JFATAL("Failed to get meta for logging message: %s", message);
+        return;
+    }
+
     va_list args;
     va_start(args, message);
-    log_output_va_list((LogLevel)level, message, GET_MOD_META() ? GET_MOD_META()->guid : "Unknown", args);
+    log_output_va_list(static_cast<LogLevel>(level),
+        message, meta->guid, args);
     va_end(args);
 }
 

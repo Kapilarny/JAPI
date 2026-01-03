@@ -9,13 +9,13 @@ add_subdirectory(external/minhook)
 # Remove the annoying 'lib' prefix
 set(CMAKE_SHARED_LIBRARY_PREFIX "")
 
-# Statically link the C++ standard library
+add_subdirectory(main_lib)
+
+# Statically link the C++ standard library (for preload DLL only)
 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -static-libstdc++ -static-libgcc")
 set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} -static")
 set(CMAKE_SHARED_LINKER_FLAGS "${CMAKE_SHARED_LINKER_FLAGS} -static")
 set(CMAKE_MODULE_LINKER_FLAGS "${CMAKE_MODULE_LINKER_FLAGS} -static")
-
-add_subdirectory(main_lib)
 
 set(OVERRIDEN_LIB_NAME "dinput8")
 

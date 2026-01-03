@@ -25,6 +25,8 @@ struct dll_mod_meta {
 
     config mod_config = config::load_mod_config("Unknown");
     DllModDrawImGUI draw_imgui_func = nullptr;
+
+    void log();
 };
 
 class modloader {
@@ -48,11 +50,11 @@ private:
     // void preload_libraries();
     // void preload_library(const std::string& path);
 
-    std::vector<HMODULE> preloaded_libs;
-    std::unordered_map<HMODULE, dll_mod_meta> loaded_mods;
-    std::unordered_map<std::string, HMODULE> loaded_mods_by_guid;
+    std::vector<HMODULE> preloaded_libs{};
+    std::unordered_map<HMODULE, dll_mod_meta> loaded_mods{};
+    std::unordered_map<std::string, HMODULE> loaded_mods_by_guid{};
 
-    std::unordered_set<std::string> load_chain_set;
+    std::unordered_set<std::string> load_chain_set{};
 
     static inline std::unique_ptr<modloader> instance = nullptr;
 };

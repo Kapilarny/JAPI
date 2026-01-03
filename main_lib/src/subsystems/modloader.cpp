@@ -60,11 +60,11 @@ void modloader::load_mods() {
             }
 
             if (e.path().stem().string()[0] == '-') {
-                JINFO("Skipping disabled plugin: %s", e.path().string().c_str());
+                JWARN("Skipping disabled plugin: %s", e.path().string().c_str());
                 continue;
             }
 
-            JINFO("Found plugin: %s", e.path().string().c_str());
+            JTRACE("Found plugin: %s", e.path().string().c_str());
             load_mod("japi/plugins/", e.path().stem().string().c_str());
         }
     }
@@ -77,7 +77,7 @@ void modloader::load_mod_dependencies(const char *path, const char *filename) {
         return;
     }
 
-    JINFO("Trying to load dependencies for mod: %s", filename);
+    JTRACE("Trying to load dependencies for mod: %s", filename);
 
     // Load the file
     config dep_config = config::load(dep_file_path);
@@ -104,14 +104,14 @@ void modloader::load_mod_dependencies(const char *path, const char *filename) {
             continue;
         }
 
-        JINFO("Loading dependency %s for mod %s", dep_name.c_str(), filename);
+        JTRACE("Loading dependency %s for mod %s", dep_name.c_str(), filename);
         load_mod(path, dep_name.c_str());
     }
 }
 
 void modloader::load_mod(const char* path, const char* filename) {
     if (loaded_mods_by_guid.contains(filename)) {
-        JINFO("Mod %s is already loaded, skipping", filename);
+        JTRACE("Mod %s is already loaded, skipping", filename);
         return;
     }
 
@@ -164,6 +164,10 @@ void modloader::load_mod(const char* path, const char* filename) {
     if (mod_init != nullptr) {
         mod_init();
     }
+}
+
+void dll_mod_meta::log() {
+    JTRACE("Mod Meta - Name: %s, Author: %s, GUID: %s, Version: %s, Description: %s", name, author, guid, version, description);
 }
 
 dll_mod_meta* modloader::get_mod_meta(HMODULE module) {

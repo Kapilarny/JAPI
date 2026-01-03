@@ -30,7 +30,7 @@ namespace logger {
         } \
     } while (0)
 
-void log_output_with_fmt(LogLevel level, const std::string& message, const std::string& plugin_guid, ...);
+void log_output_with_fmt(LogLevel level, const std::string& message, std::string plugin_guid, ...);
 void log_output_va_list(LogLevel level, const std::string& message, const std::string& plugin_guid, va_list args);
 
 #define JFATAL(message, ...) log_output_with_fmt(LOG_LEVEL_FATAL, message, "JoJoAPI", ##__VA_ARGS__);
