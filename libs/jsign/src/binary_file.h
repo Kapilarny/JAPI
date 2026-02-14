@@ -20,7 +20,7 @@ public:
 
     bool verify_signature() const;
 
-    void save_to_file(const std::string& path);
+    void save_to_file(const std::string& path, bool with_signature);
 
     [[nodiscard]] const std::vector<uint8_t>& get_data() const { return _data; }
     [[nodiscard]] const std::vector<uint8_t>& get_signature() const { return _signature; }

@@ -50,7 +50,7 @@ int main(int argc, char* argv[]) {
 
         // Save the signed file
         const std::string signed_file_path = file_to_sign + ".signed";
-        file.save_to_file(signed_file_path);
+        file.save_to_file(signed_file_path, true);
         JINFO("Saved signed file successfully to %s!", signed_file_path.c_str());
     } catch (const std::exception& e) {
         JFATAL("An error occurred: %s", e.what());
