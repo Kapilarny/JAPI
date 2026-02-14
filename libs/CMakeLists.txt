@@ -1,5 +1,3 @@
-project(JLIBS LANGUAGES C CXX)
-
 add_subdirectory(jsign)
 add_subdirectory(jlog)
 add_subdirectory(jdownload)
