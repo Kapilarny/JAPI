@@ -1,31 +1,11 @@
 cmake_minimum_required(VERSION 3.10)
-project(JAPI_preload LANGUAGES C CXX)
+
+project(JAPI LANGUAGES C CXX)
 
 set(CMAKE_CXX_STANDARD 20)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
 add_subdirectory(external/minhook)
 
-# Remove the annoying 'lib' prefix
-set(CMAKE_SHARED_LIBRARY_PREFIX "")
-
-add_subdirectory(main_lib)
-add_subdirectory(launcher)
-add_subdirectory(signer)
-
-# Statically link the C++ standard library (for preload DLL only)
-set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -static-libstdc++ -static-libgcc")
-set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} -static")
-set(CMAKE_SHARED_LINKER_FLAGS "${CMAKE_SHARED_LINKER_FLAGS} -static")
-set(CMAKE_MODULE_LINKER_FLAGS "${CMAKE_MODULE_LINKER_FLAGS} -static")
-
-set(OVERRIDEN_LIB_NAME "JAPIPreload")
-
-add_library(${OVERRIDEN_LIB_NAME} SHARED
-        src/dllmain.cpp
-        signer/src/main.cpp
-)
-
-target_include_directories(${OVERRIDEN_LIB_NAME} PRIVATE
-        src
-)
+add_subdirectory(libs)
+add_subdirectory(applications)

@@ -11,7 +11,7 @@ def main():
     public_key = base64.b64decode(pub_key_raw)
 
     # Generate the C header file with the public key as a byte array
-    with open("../external/internal/public_key.h", "w") as f:
+    with open("../libs/jsign/internal/public_key.h", "w") as f:
         f.write("#ifndef PUBLIC_KEY_H\n")
         f.write("#define PUBLIC_KEY_H\n\n")
         f.write("const unsigned char public_key[] = {\n")
