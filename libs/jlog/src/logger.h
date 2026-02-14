@@ -18,7 +18,7 @@ typedef enum LogLevel {
 } LogLevel;
 
 namespace logger {
-    void init(const std::string& logger_name);
+    void init(const std::string& logger_name, const std::string& log_file_path = "");
     void spawn_console();
 }
 

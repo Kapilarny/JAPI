@@ -1,17 +1,25 @@
 #include "logger.h"
 
 #include <cstdint>
+#include <filesystem>
 #include <windows.h>
 #include <fstream>
 
 static std::ofstream glob_log_file;
 
-void logger::init(const std::string& logger_name) {
+void logger::init(const std::string& logger_name, const std::string& log_file_path) {
     // Set global logger name
     JLOGGERNAME = logger_name;
 
+    // Create log file path if specified
+    if (!log_file_path.empty()) {
+        std::filesystem::create_directories(log_file_path);
+    }
+
+    const std::string final_log_path = log_file_path.empty() ? (JLOGGERNAME + ".log") : log_file_path + "\\" + JLOGGERNAME + ".log";
+
     // Open log file
-    glob_log_file.open(JLOGGERNAME + ".log", std::ios::out | std::ios::trunc);
+    glob_log_file.open(final_log_path, std::ios::out | std::ios::trunc);
     if (!glob_log_file.is_open()) {
         ERROR_AND_QUIT("Failed to open log file %s.log for writing!", JLOGGERNAME.c_str());
     }

@@ -68,9 +68,11 @@ keychain crypt::load_keys_from_file() {
 
 keychain& crypt::get_public_keychain() {
     static keychain pub_keychain{};
+    static bool initialized = false;
 
-    if (pub_keychain.public_key[0] == 0) {
-        std::copy(std::begin(public_key), std::end(public_key), pub_keychain.public_key);
+    if (!initialized) {
+        std::ranges::copy(public_key, pub_keychain.public_key);
+        initialized = true;
     }
 
     return pub_keychain;

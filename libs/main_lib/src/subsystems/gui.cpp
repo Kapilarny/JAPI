@@ -73,9 +73,11 @@ gui_manager::gui_manager() {
         }
     });
 
-    // register_tab_item("Test", [] {
-    //     ImGui::TextColored(GetChromaColor(), "Test");
-    // });
+    register_tab_item("Test", [] {
+        if (ImGui::Button("Restart Game")) {
+            exit(67);
+        }
+    });
 }
 
 gui_manager& gui_manager::get() {

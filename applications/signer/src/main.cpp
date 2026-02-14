@@ -11,8 +11,11 @@
 #include "logger.h"
 #include "binary_file.h"
 
+// atexit for whatever reason won't work
+// idfk whats going on
+
 int main(int argc, char* argv[]) {
-    logger::init("JAPISigner");
+    logger::init("JAPISigner", "japi/logs");
 
     if (argc < 2) {
         JWARN("No file specified to sign, do you want to generate a keypair? (y/n)");
@@ -54,6 +57,7 @@ int main(int argc, char* argv[]) {
         JINFO("Saved signed file successfully to %s!", signed_file_path.c_str());
     } catch (const std::exception& e) {
         JFATAL("An error occurred: %s", e.what());
+        Sleep(3000);
         return 1;
     }
 

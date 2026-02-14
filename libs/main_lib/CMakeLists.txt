@@ -22,8 +22,8 @@ target_include_directories(JAPI PRIVATE
         src
         exports
         ${CMAKE_SOURCE_DIR}/external/toml
-#        ${CMAKE_SOURCE_DIR}/external/imgui
 )
+
 target_link_libraries(JAPI PUBLIC
         minhook
         imgui_shared
