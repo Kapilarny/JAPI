@@ -1,3 +1,5 @@
+add_subdirectory(imgui)
+
 add_subdirectory(jsign)
 add_subdirectory(jlog)
 add_subdirectory(jdownload)
