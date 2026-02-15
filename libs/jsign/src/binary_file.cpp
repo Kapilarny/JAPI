@@ -49,11 +49,9 @@ bool binary_file::verify_signature() const {
 }
 
 void binary_file::save_to_file(const std::string &path, bool with_signature) {
-    std::vector<uint8_t> file_data;
+    std::vector<uint8_t>& file_data = _data;
     if (with_signature && _is_signed) {
         file_data = generate_signed_file();
-    } else {
-        file_data = _data;
     }
 
     std::ofstream file(path, std::ios::out | std::ios::binary | std::ios::trunc);
