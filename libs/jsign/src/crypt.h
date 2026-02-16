@@ -21,7 +21,7 @@ public:
     std::string to_base64(const std::vector<uint8_t>& data);
     std::vector<uint8_t> from_base64(const std::string& b64_string);
 
-    keychain load_keys_from_file();
+    keychain load_keys_from_file(const std::string& directory = "");
     keychain& get_public_keychain();
 
     keychain generate_pub_priv_keypair();

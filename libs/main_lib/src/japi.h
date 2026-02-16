@@ -5,7 +5,7 @@
 #ifndef JAPI_JAPI_H
 #define JAPI_JAPI_H
 
-#define JAPI_VERSION "4.0.0"
+#define JAPI_VERSION "4.1.0"
 
 #include <memory>
 #include <functional>

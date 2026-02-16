@@ -10,7 +10,6 @@
 process::process(const char *exe_path, const char *working_dir) {
     _exe_path = exe_path;
     _working_dir = working_dir ? working_dir : std::filesystem::current_path().string();
-    create();
 }
 
 bool process::is_process_running(const char *process_name) {
@@ -41,6 +40,10 @@ bool process::is_running() const {
 }
 
 void process::inject_dll(const char *dll_path) const {
+    if (!_created) {
+        throw std::runtime_error("process::inject_dll - Cannot inject DLL into a process that has not been created");
+    }
+
     if (!is_running()) {
         throw std::runtime_error("process::inject_dll - Cannot inject DLL into a process that is not running");
     }
@@ -104,6 +107,10 @@ void process::restart() {
 }
 
 void process::resume(const bool block_until_exit) const {
+    if (!_created) {
+        throw std::runtime_error("process::resume - Cannot resume a process that has not been created");
+    }
+
     if (!ResumeThread(_pi.hThread)) {
         throw std::runtime_error("process::resume - Failed to resume process");
     }
@@ -139,9 +146,15 @@ void process::create() {
         nullptr, _working_dir.c_str(), &_si, &_pi)) {
         throw std::runtime_error("process::process - Failed to create process");
     }
+
+    _created = true;
 }
 
 void process::cleanup() {
+    if (!_created) {
+        return;
+    }
+
     TerminateProcess(_pi.hProcess, 0);
 
     CloseHandle(_pi.hThread);

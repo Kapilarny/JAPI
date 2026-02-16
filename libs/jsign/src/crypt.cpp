@@ -38,10 +38,10 @@ std::vector<uint8_t> crypt::from_base64(const std::string &b64_string) {
     return data;
 }
 
-keychain crypt::load_keys_from_file() {
+keychain crypt::load_keys_from_file(const std::string &directory) {
     keychain keys{};
-    std::ifstream pub_key_file("public.key", std::ios::in | std::ios::binary);
-    std::ifstream priv_key_file("private.key", std::ios::in | std::ios::binary);
+    std::ifstream pub_key_file(directory + "public.key", std::ios::in | std::ios::binary);
+    std::ifstream priv_key_file(directory + "private.key", std::ios::in | std::ios::binary);
 
     if (!pub_key_file.is_open() || !priv_key_file.is_open()) {
         throw std::runtime_error("crypt::load_keys - Failed to open key files");

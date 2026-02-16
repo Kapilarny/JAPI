@@ -13,6 +13,8 @@ class process {
 public:
     explicit process(const char* exe_path, const char* working_dir = nullptr);
 
+    void create();
+
     static bool is_process_running(const char* process_name);
     bool is_running() const;
 
@@ -22,9 +24,9 @@ public:
 
     [[nodiscard]] DWORD get_exit_code() const;
 private:
-    void create();
     void cleanup();
 
+    bool _created = false;
     std::string _exe_path;
     std::string _working_dir;
     STARTUPINFOA _si{};

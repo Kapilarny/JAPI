@@ -9,6 +9,9 @@ add_executable(${PROJECT_NAME}
         src/main.cpp
         src/process.h
         src/process.cpp
+        src/defines.h
+        src/launcher.cpp
+        src/launcher.h
 )
 
 
