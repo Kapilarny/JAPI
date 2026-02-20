@@ -2,7 +2,6 @@ project(JAPI_main LANGUAGES C CXX)
 
 add_library(JAPI SHARED
         src/main.cpp
-        src/subsystems/config.cpp
         src/japi.cpp
         src/JoJoAPI.cpp
         src/subsystems/modloader.cpp
@@ -21,11 +20,11 @@ add_library(JAPI SHARED
 target_include_directories(JAPI PRIVATE
         src
         exports
-        ${CMAKE_SOURCE_DIR}/external/toml
 )
 
 target_link_libraries(JAPI PUBLIC
         minhook
         imgui_shared
         JLOG
+        JConfig
 )

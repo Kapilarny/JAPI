@@ -11,7 +11,7 @@
 #include <functional>
 #include <windows.h>
 
-#include "subsystems/config.h"
+#include <config.h>
 #include "subsystems/modloader.h"
 
 class japi {

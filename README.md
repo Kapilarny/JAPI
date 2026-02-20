@@ -15,6 +15,9 @@ It's in a very early stage of development, but it's already possible to create m
 
 The documentation is currently a work in progress, although you can ask me any questions on our [modding Discord](https://discord.jojomodding.com)
 
+## TODO's
+- [ ] Namespace library headers (e.g. `jconfig/config.h` instead of `config.h`)
+
 ## Donations
 
 Huge thanks to these people for supporting this project:
