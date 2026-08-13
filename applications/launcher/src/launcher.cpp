@@ -10,6 +10,7 @@
 #include "logger.h"
 #include "process.h"
 #include "defines.h"
+#include "input.h"
 
 launcher::launcher() : _cfg(config::load("japi/config/launcher.toml")) {}
 
@@ -20,8 +21,11 @@ void launcher::run() {
         JINFO("First launch detected, setting up...");
         _cfg.set("first_launch", false);
 
-        const int result = MessageBoxA(nullptr, "Do you want to enable auto-updates? (Recommended)", "Auto-Update", MB_ICONQUESTION | MB_YESNO);
-        _cfg.set("auto_update", result == IDYES);
+        _cfg.set("auto_update", input::query("Do you want to enable auto-updates? (Recommended)", "Auto-Update"));
+
+        if (input::query("Should JAPIUpdater try to cleanup old JAPI files? (potentially dangerous)", "Legacy")) {
+            cleanup_old_files();
+        }
 
 
     }
@@ -69,8 +73,8 @@ void launcher::cleanup_old_files() {
     }
 
     // Add configs to the list of old files to delete
-    old_files.push_back("japi/config/JAPI.cfg");
-    old_files.push_back("japi/config/updater.cfg");
+    old_files.emplace_back("japi/config/JAPI.cfg");
+    old_files.emplace_back("japi/config/updater.cfg");
 
     for (const auto& file : old_files) {
         if (std::filesystem::exists(file)) {
@@ -83,7 +87,7 @@ void launcher::cleanup_old_files() {
 void launcher::launch_game() {
     // Get current PWD
 #ifdef DEBUG_MODE
-    const std::string current_path = "C:\\Program Files (x86)\\Steam\\steamapps\\common\\JoJo's Bizarre Adventure All-Star Battle R";
+    const std::string current_path = R"(C:\Program Files (x86)\Steam\steamapps\common\JoJo's Bizarre Adventure All-Star Battle R)";
 #else
     const std::string current_path = std::filesystem::current_path().string();
 #endif

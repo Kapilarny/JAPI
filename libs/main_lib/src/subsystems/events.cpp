@@ -16,7 +16,7 @@ void event_manager::register_cancellable_event_listener(const std::string &event
 }
 
 void event_manager::transmit_event(const std::string &event_name, void *event_data) {
-    auto it = event_listeners.find(event_name);
+    const auto it = event_listeners.find(event_name);
 
     if (it == event_listeners.end()) {
         // JWARN("Trying to transmit event '%s' with no listeners!", event_name.c_str());

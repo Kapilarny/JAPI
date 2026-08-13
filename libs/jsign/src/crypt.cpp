@@ -4,10 +4,27 @@
 
 #include "crypt.h"
 
+#include <cstring>
 #include <sodium.h>
 #include <fstream>
 
 #include "public_key.h"
+
+// This depends on libsodium being initialized before trying to hash, but oh well
+// such are the charms of the design pattern of singleton lmfao
+sha256hash::sha256hash(const std::vector<uint8_t> &data) {
+    crypto_hash_sha256(
+        raw.data(),
+        data.data(),
+        data.size()
+    );
+}
+
+std::string sha256hash::to_str() const {
+    char hex[crypto_hash_sha256_BYTES*2+1]{};
+    sodium_bin2hex(hex, sizeof(hex), raw.data(), raw.size());
+    return hex;
+}
 
 crypt* crypt::get() {
     if (_instance) return _instance.get();

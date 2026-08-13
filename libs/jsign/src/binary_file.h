@@ -19,6 +19,7 @@ public:
     void generate_signature(const keychain& keys);
 
     bool verify_signature() const;
+    sha256hash generate_hash() const;
 
     void save_to_file(const std::string& path, bool with_signature);
 

@@ -48,6 +48,10 @@ bool binary_file::verify_signature() const {
     return crypt::get()->verify_signature(_data, _signature, crypt::get()->get_public_keychain());
 }
 
+sha256hash binary_file::generate_hash() const {
+    return sha256hash(_data);
+}
+
 void binary_file::save_to_file(const std::string &path, bool with_signature) {
     std::vector<uint8_t>& file_data = _data;
     if (with_signature && _is_signed) {

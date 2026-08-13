@@ -12,6 +12,7 @@ add_executable(${PROJECT_NAME}
         src/defines.h
         src/launcher.cpp
         src/launcher.h
+        src/input.cpp
 )
 
 

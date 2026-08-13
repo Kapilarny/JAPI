@@ -1,0 +1,30 @@
+{
+  "manifest_version": "1.0.0",
+  "content": {
+    "version": "4.0.0",
+    "dlls": [
+      {
+        "name": "libwinpthread-1.dll",
+        "hash": "somehashhere"
+      },
+      {
+        "name": "libgcc_s_seh-1.dll",
+        "hash": "somehashhere"
+      },
+      {
+        "name": "libstdc++-6.dll",
+        "hash": "somehashhere"
+      },
+      {
+        "name": "imgui_shared.dll",
+        "hash": "somehashhere"
+      }
+    ],
+    "load_order": [
+      "libwinpthread-1.dll",
+      "libgcc_s_seh-1.dll",
+      "libstdc++-6.dll",
+      "imgui_shared.dll"
+    ]
+  }
+}

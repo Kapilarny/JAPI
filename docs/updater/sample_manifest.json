@@ -1,0 +1,16 @@
+{
+  "manifest_version": "1.0.0",
+  "content": {
+    "version": "4.0.0",
+    "files": [
+      {
+        "archive_path": "JAPI.dll",
+        "extract_path": "japi/dlls/JAPI.dll"
+      },
+      {
+        "archive_path": "JAPIPreload.dll",
+        "extract_path": "japi/dlls/JAPIPreload.dll"
+      }
+    ]
+  }
+}
