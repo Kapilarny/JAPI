@@ -1,0 +1,30 @@
+{
+  "version": 6,
+  "configurePresets": [
+    {
+      "name": "release_package",
+      "generator": "Ninja",
+      "binaryDir": "${sourceDir}/release_package/build",
+      "cacheVariables": {
+        "CMAKE_BUILD_TYPE": "Release",
+        "CMAKE_MAKE_PROGRAM": "$env{NINJA_PATH}",
+        "CMAKE_C_COMPILER": "$env{CC}",
+        "CMAKE_CXX_COMPILER": "$env{CXX}",
+        "CMAKE_RUNTIME_OUTPUT_DIRECTORY": "${sourceDir}/release_package/build/out/bin",
+        "CMAKE_LIBRARY_OUTPUT_DIRECTORY": "${sourceDir}/release_package/build/out/lib",
+        "CMAKE_ARCHIVE_OUTPUT_DIRECTORY": "${sourceDir}/release_package/build/out/lib"
+      }
+    }
+  ],
+  "buildPresets": [
+    {
+      "name": "release_package",
+      "configurePreset": "release_package",
+      "targets": [
+        "JAPI",
+        "JAPIPreload",
+        "JAPISigner"
+      ]
+    }
+  ]
+}

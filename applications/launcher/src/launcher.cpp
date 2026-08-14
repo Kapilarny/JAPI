@@ -7,6 +7,7 @@
 #include <algorithm>
 #include <filesystem>
 
+#include "binary_file.h"
 #include "logger.h"
 #include "process.h"
 #include "defines.h"
@@ -17,24 +18,33 @@ launcher::launcher() : _cfg(config::load("japi/config/launcher.toml")) {}
 void launcher::run() {
     JINFO("Running launcher version %s", LAUNCHER_VERSION);
 
+    if (_cfg.get<bool>("auto_update", true)) {
+        JINFO("Auto-update is enabled, checking for updates...");
+        check_for_updates();
+    }
+
     if (_cfg.get<bool>("first_launch", true)) {
         JINFO("First launch detected, setting up...");
         _cfg.set("first_launch", false);
 
         _cfg.set("auto_update", input::query("Do you want to enable auto-updates? (Recommended)", "Auto-Update"));
 
-        if (input::query("Should JAPIUpdater try to cleanup old JAPI files? (potentially dangerous)", "Legacy")) {
+        if (input::query("Should JAPIUpdater try to cleanup old JAPI files?", "Legacy")) {
             cleanup_old_files();
         }
 
-
+        install_japi();
     }
 
     launch_game();
 }
 
+void launcher::check_for_updates() {
+
+}
+
 void launcher::install_japi() {
-    cleanup_old_files();
+
 }
 
 void launcher::cleanup_old_files() {

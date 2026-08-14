@@ -3,6 +3,8 @@ project(src)
 add_library(JConfig STATIC
         src/config.h
         src/config.cpp
+        src/version.h
+        src/version.cpp
 )
 
 target_include_directories(JConfig PUBLIC

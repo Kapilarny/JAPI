@@ -17,6 +17,9 @@ add_library(JAPI SHARED
         src/util/mem.h
 )
 
+# remove the lib prefix from the library name
+set_target_properties(JAPI PROPERTIES PREFIX "")
+
 target_include_directories(JAPI PRIVATE
         src
         exports

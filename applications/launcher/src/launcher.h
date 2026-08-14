@@ -9,9 +9,10 @@
 class launcher {
 public:
     launcher();
-    void run();
 
+    void run();
 private:
+    void check_for_updates();
     void install_japi();
     void cleanup_old_files();
     void launch_game();
