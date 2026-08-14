@@ -13,8 +13,10 @@ add_executable(${PROJECT_NAME}
         src/launcher.cpp
         src/launcher.h
         src/input.cpp
+        src/installer.cpp
+        src/installer.h
 )
 
 
-target_include_directories(${PROJECT_NAME} PRIVATE src)
+target_include_directories(${PROJECT_NAME} PRIVATE src ../../external/nlohmann)
 target_link_libraries(${PROJECT_NAME} JSIGN JLOG JDOWNLOAD JConfig miniz)

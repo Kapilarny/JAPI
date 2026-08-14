@@ -20,6 +20,17 @@ sha256hash::sha256hash(const std::vector<uint8_t> &data) {
     );
 }
 
+sha256hash::sha256hash(const std::string &str) {
+    if (str.size() != crypto_hash_sha256_BYTES * 2) {
+        throw std::runtime_error("sha256hash::sha256hash - Invalid hex string length");
+    }
+
+    for (size_t i = 0; i < crypto_hash_sha256_BYTES; ++i) {
+        std::string byte_str = str.substr(i * 2, 2);
+        raw[i] = static_cast<uint8_t>(std::stoul(byte_str, nullptr, 16));
+    }
+}
+
 std::string sha256hash::to_str() const {
     char hex[crypto_hash_sha256_BYTES*2+1]{};
     sodium_bin2hex(hex, sizeof(hex), raw.data(), raw.size());

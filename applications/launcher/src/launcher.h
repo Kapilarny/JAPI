@@ -4,6 +4,8 @@
 
 #ifndef JAPI_LAUNCHER_H
 #define JAPI_LAUNCHER_H
+#include <ctime>
+
 #include "config.h"
 
 class launcher {

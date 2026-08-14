@@ -18,6 +18,7 @@ struct keychain {
 
 struct sha256hash {
     explicit sha256hash(const std::vector<uint8_t> &data);
+    sha256hash(const std::string& str);
 
     std::array<uint8_t, crypto_hash_sha256_BYTES> raw{};
 

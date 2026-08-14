@@ -46,49 +46,13 @@ def create_manifests():
         "manifest_version": 1,
         "content": {
             "version": release_man["japi_version"],
-            "timestamp": time.time_ns(),
-            "files": [
-                {"name": "JAPI.dll"},
-                {"name": "JAPIPreload.dll"},
-            ],
+            "timestamp": time.time()
         }
     }
 
     with open("out/raw/manifest.json", "w") as f:
         json.dump(manifest, f, indent=2)
 
-    """
-    {
-  "manifest_version": 1,
-  "content": {
-    "version": "4.0.0",
-    "dlls": [
-      {
-        "name": "libwinpthread-1.dll",
-        "hash": "somehashhere"
-      },
-      {
-        "name": "libgcc_s_seh-1.dll",
-        "hash": "somehashhere"
-      },
-      {
-        "name": "libstdc++-6.dll",
-        "hash": "somehashhere"
-      },
-      {
-        "name": "imgui_shared.dll",
-        "hash": "somehashhere"
-      }
-    ],
-    "load_order": [
-      "libwinpthread-1.dll",
-      "libgcc_s_seh-1.dll",
-      "libstdc++-6.dll",
-      "imgui_shared.dll"
-    ]
-  }
-}
-"""
     # find all dlls in ../external/dlls and add them to the manifest
     dlls = []
     for file in os.listdir("../external/dlls"):
@@ -186,6 +150,9 @@ def cleanup_previous_builds():
 
 
 def main():
+    # Set the working directory to the script's directory
+    os.chdir(os.path.dirname(os.path.abspath(__file__)))
+
     cleanup_previous_builds()
     create_directories()
 
