@@ -171,6 +171,13 @@ def sign_package():
         check=True,
     )
 
+    # rename the file to 'versionXXX.japi'
+    release_man = import_release_manifest()
+    version = release_man["japi_version"]
+    # squash the version string to remove dots
+    version_squashed = version.replace(".", "")
+    os.rename("out/japi_release.zip.signed", f"out/update{version_squashed}.japi")
+
 
 def cleanup_previous_builds():
     # remove out folder if it exists

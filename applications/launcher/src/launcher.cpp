@@ -12,11 +12,14 @@
 #include "process.h"
 #include "defines.h"
 #include "input.h"
+#include "miniz.h"
 
 launcher::launcher() : _cfg(config::load("japi/config/launcher.toml")) {}
 
 void launcher::run() {
     JINFO("Running launcher version %s", LAUNCHER_VERSION);
+
+    install_japi();
 
     if (_cfg.get<bool>("auto_update", true)) {
         JINFO("Auto-update is enabled, checking for updates...");
@@ -44,7 +47,38 @@ void launcher::check_for_updates() {
 }
 
 void launcher::install_japi() {
+    // TODO: Grab release package from the internet and verify it
 
+    binary_file update_file("update420.japi", true);
+    if (update_file.verify_signature()) {
+        JINFO("Update package signature verified successfully.");
+    } else {
+        JINFO("Tampered/corrupted update package detected.");
+        return;
+    }
+
+    const auto& data = update_file.get_data();
+    JINFO("Packed update size: %zu bytes", data.size());
+
+    mz_zip_archive zip{};
+    if (!mz_zip_reader_init_mem(&zip, data.data(), data.size(), 0)) {
+        JINFO("Failed to initialize zip reader.");
+        return;
+    }
+
+    mz_uint num_files = mz_zip_reader_get_num_files(&zip);
+    JINFO("%u files found in the update package.", num_files);
+
+    for (mz_uint i = 0; i < num_files; i++) {
+        mz_zip_archive_file_stat stat{};
+
+        if (!mz_zip_reader_file_stat(&zip, i, &stat))
+            continue;
+
+        JINFO("File: %s, Uncompressed Size: %u bytes", stat.m_filename, stat.m_uncomp_size);
+    }
+
+    mz_zip_reader_end(&zip);
 }
 
 void launcher::cleanup_old_files() {
