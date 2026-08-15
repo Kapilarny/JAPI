@@ -14,6 +14,7 @@ public:
     downloader();
 
     std::vector<char> download_file(const std::string& url);
+    void download_to_disk(const std::string& url, const std::string& output_path);
 private:
     HINTERNET _internet;
 };

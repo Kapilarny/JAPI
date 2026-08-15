@@ -9,6 +9,7 @@
 #include <vector>
 
 #include "binary_file.h"
+#include "downloader.h"
 #include "miniz.h"
 
 struct main_manifest {
@@ -24,10 +25,9 @@ struct dependencies_manifest {
 
 class installer {
 public:
-    explicit installer(binary_file& update_package);
+    installer(binary_file& update_package, downloader& dl);
 
     void install();
-
 private:
     void initialize_archive();
     void shutdown_archive();
@@ -38,6 +38,8 @@ private:
 
     void check_dependencies();
     void install_files();
+
+    void install_game_binaries();
 
     std::vector<uint8_t> extract_file_to_vec(mz_uint file_index);
     void extract_file_to_disk(mz_uint file_index, const std::string& output_path);
@@ -51,6 +53,7 @@ private:
     std::vector<mz_uint> _installation_files{};
 
     binary_file& _update_package;
+    downloader& _dl;
 
     main_manifest _main_manifest{};
     dependencies_manifest _dependencies_manifest{};

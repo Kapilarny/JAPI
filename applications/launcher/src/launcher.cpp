@@ -13,16 +13,18 @@
 #include "defines.h"
 #include "input.h"
 #include "installer.h"
+#include "json.hpp"
 #include "miniz.h"
+#include "version.h"
+
+using json = nlohmann::json;
 
 launcher::launcher() : _cfg(config::load("japi/config/launcher.toml")) {}
 
 void launcher::run() {
     JINFO("Running launcher version %s", LAUNCHER_VERSION);
 
-    install_japi();
-
-    if (_cfg.get<bool>("auto_update", true)) {
+    if (_cfg.get<bool>("auto_update", false)) {
         JINFO("Auto-update is enabled, checking for updates...");
         check_for_updates();
     }
@@ -37,22 +39,79 @@ void launcher::run() {
             cleanup_old_files();
         }
 
-        install_japi();
+        check_for_updates();
     }
 
     launch_game();
 }
 
 void launcher::check_for_updates() {
+    // Download manifest
+    const auto url = "https://raw.githubusercontent.com/Kapilarny/JAPI/new_files/updates/manifest.json";
+    JINFO("Downloading update manifest from: %s", url);
 
+    std::vector<char> manifest_data;
+
+    try {
+        manifest_data = _dl.download_file(url);
+    } catch (const std::exception& e) {
+        JERROR("Failed to download update manifest: %s", e.what());
+        return;
+    }
+
+    // Parse
+    json manifest_json = json::parse(manifest_data);
+
+    if (!manifest_json.contains("version") || !manifest_json.contains("content")) {
+        throw std::runtime_error("launcher::check_for_updates - Invalid manifest format.");
+    }
+
+    if (manifest_json["version"] != 1) {
+        throw std::runtime_error("launcher::check_for_updates - Unsupported manifest version: " + std::to_string(manifest_json["version"].get<int>()));
+    }
+
+    const auto& content = manifest_json["content"];
+    const std::string latest_version = content["latest_version"];
+
+    const auto installed_version = _cfg.get<std::string>("japi_version", "0.0.0");
+
+    if (version(latest_version) > version(installed_version)) {
+        JINFO("Update available: %s -> %s", installed_version.c_str(), latest_version.c_str());
+
+        if (input::query("An update is available. Do you want to install it?", "Update")) {
+            const auto& updates = content["updates"];
+            const auto& latest = std::ranges::find_if(updates, [&](const json& update) {
+                return update["version"] == latest_version;
+            });
+
+            if (latest == updates.end()) {
+                throw std::runtime_error("launcher::check_for_updates - Update information for version " + latest_version + " not found in manifest.");
+            }
+
+            // Get the update file name
+            const std::string update_file_name = (*latest)["package_name"];
+
+            install_japi(update_file_name);
+            _cfg.set("japi_version", latest_version);
+        } else {
+            JINFO("User chose not to update.");
+        }
+    } else {
+        JINFO("No updates available. Installed version: %s", installed_version.c_str());
+    }
 }
 
-void launcher::install_japi() {
-    // TODO: Grab release package from the internet and verify it
+void launcher::install_japi(const std::string& update_file_name) {
+    // Download the update package
+    const auto url = "https://raw.githubusercontent.com/Kapilarny/JAPI/new_files/updates/japi/" + update_file_name;
+    JINFO("Downloading update package from: %s", url.c_str());
 
-    binary_file update_file("update420.japi", true);
+    auto data = _dl.download_file(url);
+    JINFO("Downloaded %zu bytes.", data.size());
 
-    installer inst(update_file);
+    binary_file update_file(reinterpret_cast<std::vector<uint8_t>&>(data), true);
+
+    installer inst(update_file, _dl);
     inst.install();
 }
 
@@ -111,7 +170,7 @@ void launcher::launch_game() {
     const std::string current_path = std::filesystem::current_path().string();
 #endif
 
-    const std::string game_path = current_path + "\\ASBR.exe";
+    const std::string game_path = current_path + R"(\japi\bin\unpacked.exe)";
 
     process g_process(game_path.c_str(), current_path.c_str());
     do {

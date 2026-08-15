@@ -7,6 +7,7 @@
 #include <ctime>
 
 #include "config.h"
+#include "downloader.h"
 
 class launcher {
 public:
@@ -15,11 +16,12 @@ public:
     void run();
 private:
     void check_for_updates();
-    void install_japi();
+    void install_japi(const std::string &update_file_name);
     void cleanup_old_files();
     void launch_game();
 
     config _cfg;
+    downloader _dl;
 };
 
 #endif //JAPI_LAUNCHER_H

@@ -11,10 +11,11 @@ struct version {
     explicit version(const std::string& str);
     version(uint8_t major, uint8_t minor, uint8_t patch);
 
-    std::string to_string() const;
+    [[nodiscard]] std::string to_string() const;
 
     uint8_t major{}, minor{}, patch{};
 
+    std::strong_ordering operator<=>(const version & version) const;
     bool operator==(const version &) const;
 };
 

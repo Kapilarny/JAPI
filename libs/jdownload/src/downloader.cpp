@@ -4,6 +4,8 @@
 
 #include "downloader.h"
 
+#include <filesystem>
+#include <fstream>
 #include <iostream>
 #include <stdexcept>
 
@@ -101,4 +103,24 @@ std::vector<char> downloader::download_file(const std::string &url) {
     WinHttpCloseHandle(connection);
 
     return data;
+}
+
+void downloader::download_to_disk(const std::string &url, const std::string &output_path) {
+    const auto data = download_file(url);
+
+    // Make dirs
+    const auto output_dir = std::filesystem::path(output_path).parent_path();
+    if (!std::filesystem::exists(output_dir)) {
+        std::filesystem::create_directories(output_dir);
+    }
+
+    std::ofstream output_file(output_path, std::ios::binary);
+    if (!output_file) {
+        throw std::runtime_error("downloader::download_to_disk - Failed to open output file: " + output_path);
+    }
+
+    output_file.write(data.data(), data.size());
+    if (!output_file) {
+        throw std::runtime_error("downloader::download_to_disk - Failed to write data to output file: " + output_path);
+    }
 }

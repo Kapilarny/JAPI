@@ -9,11 +9,12 @@
 #include <logger.h>
 #include <miniz.h>
 
+#include "downloader.h"
 #include "json.hpp"
 
 using json = nlohmann::json;
 
-installer::installer(binary_file &update_package) : _update_package(update_package) {}
+installer::installer(binary_file &update_package, downloader& dl) : _update_package(update_package), _dl(dl) {}
 
 void installer::install() {
     JINFO("Trying to install update package...");
@@ -30,6 +31,8 @@ void installer::install() {
     load_manifests();
     check_dependencies();
     install_files();
+
+    install_game_binaries();
 
     shutdown_archive();
 }
@@ -193,8 +196,8 @@ void installer::check_dependencies() {
     for (const auto& dep_name : missing_dependencies) {
         JINFO("Acquiring missing dependency: %s", dep_name.c_str());
 
-        // TODO: Download the missing dependency
-
+        const auto out_path = std::filesystem::path("japi/dlls/libs") / dep_name;
+        _dl.download_to_disk("https://raw.githubusercontent.com/Kapilarny/JAPI/new_files/updates/dlls/" + dep_name, out_path.string());
     }
 
     // Generate lib_load_order.txt
@@ -237,6 +240,20 @@ void installer::install_files() {
 
         JINFO("Successfully installed file: %s", output_path.c_str());
     }
+}
+
+void installer::install_game_binaries() {
+    // Check if japi/bin/unpacked.exe exists
+    const auto unpacked_exe_path = std::filesystem::path("japi/bin/unpacked.exe");
+    if (std::filesystem::exists(unpacked_exe_path)) return;
+
+    JINFO("Game binaries not found. Installing game binaries...");
+
+    // Grab unpacked.exe from the web
+    const auto url = "https://raw.githubusercontent.com/Kapilarny/JAPI/new_files/updates/bin/unpacked.exe";
+    _dl.download_to_disk(url, unpacked_exe_path.string());
+
+    JINFO("Successfully installed game binaries to %s", unpacked_exe_path.string().c_str());
 }
 
 std::string installer::timestamp_to_string(const std::time_t timestamp) {
