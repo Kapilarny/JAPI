@@ -2,3 +2,7 @@ cmake-build-debug/
 binaries/
 keys/
 release_package/out/
+
+.idea/
+.vs/
+.vscode/
