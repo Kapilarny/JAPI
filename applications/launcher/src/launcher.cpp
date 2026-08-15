@@ -173,6 +173,7 @@ void launcher::launch_game() {
     const std::string game_path = current_path + R"(\japi\bin\unpacked.exe)";
 
     process g_process(game_path.c_str(), current_path.c_str());
+    logger::despawn_console();
     do {
         g_process.restart();
         g_process.inject_dll(std::string(current_path + R"(\japi\dlls\JAPIPreload.dll)").c_str());

@@ -25,6 +25,10 @@ void logger::init(const std::string& logger_name, const std::string& log_file_pa
     }
 }
 
+void logger::despawn_console() {
+    FreeConsole();
+}
+
 void error_box(const std::string &message, const std::string &title) {
     MessageBoxA(NULL, message.c_str(), title.c_str(), MB_OK | MB_ICONERROR);
 }

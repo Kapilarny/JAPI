@@ -20,6 +20,7 @@ typedef enum LogLevel {
 namespace logger {
     void init(const std::string& logger_name, const std::string& log_file_path = "");
     void spawn_console();
+    void despawn_console();
 }
 
 #define ASSERT(expr, msg) \
