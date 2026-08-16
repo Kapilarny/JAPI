@@ -9,6 +9,8 @@
 #include <iostream>
 #include <stdexcept>
 
+#include "binary_file.h"
+
 downloader::downloader() {
     _internet = WinHttpOpen(
         L"JAPIDownloader/1.0",
@@ -105,8 +107,13 @@ std::vector<char> downloader::download_file(const std::string &url) {
     return data;
 }
 
-void downloader::download_to_disk(const std::string &url, const std::string &output_path) {
+void downloader::download_to_disk(const std::string &url, const std::string &output_path, const sha256hash &hash) {
     const auto data = download_file(url);
+    auto downloaded_data_hash = sha256hash((std::vector<uint8_t>&)data);
+
+    if (hash != downloaded_data_hash) {
+        throw std::runtime_error("downloader::download_to_disk - Hash mismatch for downloaded file from URL: " + url);
+    }
 
     // Make dirs
     const auto output_dir = std::filesystem::path(output_path).parent_path();

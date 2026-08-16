@@ -9,4 +9,4 @@ add_library(JDOWNLOAD STATIC
 # Add include directories
 target_include_directories(JDOWNLOAD PUBLIC src)
 
-target_link_libraries(JDOWNLOAD pthread winhttp)
+target_link_libraries(JDOWNLOAD pthread winhttp JSIGN)

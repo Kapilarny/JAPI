@@ -8,7 +8,7 @@ add_library(JSIGN STATIC
         src/binary_file.h)
 
 # Add include directories
-target_include_directories(JSIGN PUBLIC src external/libsodium/include internal/)
+target_include_directories(JSIGN PUBLIC src/ external/libsodium/include internal/)
 
 # Link against libsodium
 set(sodium "${PROJECT_SOURCE_DIR}/external/libsodium/lib/libsodium.a")

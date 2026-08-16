@@ -9,12 +9,14 @@
 #include <windows.h>
 #include <winhttp.h>
 
+#include "crypt.h"
+
 class downloader {
 public:
     downloader();
 
     std::vector<char> download_file(const std::string& url);
-    void download_to_disk(const std::string& url, const std::string& output_path);
+    void download_to_disk(const std::string& url, const std::string& output_path, const sha256hash &hash);
 private:
     HINTERNET _internet;
 };

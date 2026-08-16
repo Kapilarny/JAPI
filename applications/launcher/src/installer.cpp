@@ -170,34 +170,34 @@ void installer::load_dependencies_manifest() {
 }
 
 void installer::check_dependencies() {
-    std::vector<std::string> missing_dependencies;
+    std::vector<std::pair<std::string, sha256hash>> missing_dependencies;
 
     // Check the japi/dlls/libs for missing/mismatched dependencies based on the dependencies manifest
     for (const auto& [dep_name, dep_hash_str] : _dependencies_manifest.dependencies) {
         const std::filesystem::path dep_path = std::filesystem::path("japi/dlls/libs") / dep_name;
 
+        auto dep_hash = sha256hash(dep_hash_str);
         if (!std::filesystem::exists(dep_path)) {
             JWARN("Missing dependency: %s", dep_name.c_str());
-            missing_dependencies.push_back(dep_name);
+            missing_dependencies.emplace_back(dep_name, dep_hash);
             continue;
         }
 
         // Verify the hash of the existing dependency
         binary_file dep_file(dep_path.string(), false);
         auto f_hash = dep_file.generate_hash();
-        auto dep_hash = sha256hash(dep_hash_str);
 
         if (f_hash != dep_hash) {
             JWARN("Mismatched hash for dependency: %s", dep_name.c_str());
-            missing_dependencies.push_back(dep_name);
+            missing_dependencies.emplace_back(dep_name, dep_hash);
         }
     }
 
-    for (const auto& dep_name : missing_dependencies) {
+    for (const auto& [dep_name, dep_hash] : missing_dependencies) {
         JINFO("Acquiring missing dependency: %s", dep_name.c_str());
 
         const auto out_path = std::filesystem::path("japi/dlls/libs") / dep_name;
-        _dl.download_to_disk("https://raw.githubusercontent.com/Kapilarny/JAPI/new_files/updates/dlls/" + dep_name, out_path.string());
+        _dl.download_to_disk("https://raw.githubusercontent.com/Kapilarny/JAPI/new_files/updates/dlls/" + dep_name, out_path.string(), dep_hash);
     }
 
     // Generate lib_load_order.txt
@@ -250,8 +250,10 @@ void installer::install_game_binaries() {
     JINFO("Game binaries not found. Installing game binaries...");
 
     // Grab unpacked.exe from the web
+    const auto hash = sha256hash("4d6044d50cc40c74a43c25a21c112884ac319fa24c4c5bf208ddff984f922fee");
+
     const auto url = "https://raw.githubusercontent.com/Kapilarny/JAPI/new_files/updates/bin/unpacked.exe";
-    _dl.download_to_disk(url, unpacked_exe_path.string());
+    _dl.download_to_disk(url, unpacked_exe_path.string(), hash);
 
     JINFO("Successfully installed game binaries to %s", unpacked_exe_path.string().c_str());
 }

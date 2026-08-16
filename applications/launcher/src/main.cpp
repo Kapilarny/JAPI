@@ -19,6 +19,10 @@ int main() {
     // Init logger
     logger::init("JAPILauncher", "japi/logs");
 
+    if (!std::filesystem::exists("ASBR.exe")) {
+        ERROR_AND_QUIT("You must run the JAPILauncher from the game directory!");
+    }
+
     try {
         launcher l;
         l.run();
