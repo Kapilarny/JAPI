@@ -59,6 +59,8 @@ void launcher::check_for_updates() {
         return;
     }
 
+    // TODO: signing?
+
     // Parse
     json manifest_json = json::parse(manifest_data);
 
