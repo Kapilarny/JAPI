@@ -195,8 +195,8 @@ const char * JAPI_GetVersion() {
     return JAPI_VERSION;
 }
 
-JAPIBatchHookRegisterResult JAPI_BatchRegisterHooks(const JAPIBatchRegisterHookContainer hooks) {
-    JAPIBatchHookRegisterResult res{};
+JAPIBatchRegisterHookResult JAPI_BatchRegisterHooks(const JAPIBatchRegisterHookContainer hooks) {
+    JAPIBatchRegisterHookResult res{};
     res.count = hooks.count;
     res.handles = (JAPIHookHandle*)malloc(sizeof(JAPIHookHandle) * res.count);
 

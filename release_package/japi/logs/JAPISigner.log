@@ -1,0 +1,4 @@
+[JAPISigner] [INFO]: Loading keys from directory: ../keys\
+[JAPISigner] [INFO]: Generated signature for file successfully!
+[JAPISigner] [INFO]: Saved signed file successfully to out/japi_release.zip.signed!
+[JAPISigner] [INFO]: Exiting...

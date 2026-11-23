@@ -2,6 +2,7 @@ cmake-build-debug/
 binaries/
 keys/
 release_package/out/
+release_package/build/
 
 .idea/
 .vs/

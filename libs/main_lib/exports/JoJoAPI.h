@@ -36,11 +36,11 @@ typedef struct JAPIBatchRegisterHookContainer {
     uint32_t count;
 } JAPIBatchRegisterHookContainer;
 
-typedef struct JAPIBatchHookRegisterResult {
+typedef struct JAPIBatchRegisterHookResult {
     JAPIHookHandle* handles;
     uint32_t count;
-} JAPIBatchHookReturn;
-typedef JAPIBatchHookReturn JAPIBatchUnregisterHookContainer;
+} JAPIBatchRegisterHookResult;
+typedef JAPIBatchRegisterHookResult JAPIBatchUnregisterHookContainer; // stupid but whatever
 
 typedef struct JAPIBatchHookUnregisterResult {
     bool* success;
@@ -108,14 +108,16 @@ JEXP JAPIHookHandle JAPI_RegisterHook(JAPIHookMeta hook_meta);
 JEXP bool JAPI_UnregisterHook(JAPIHookHandle hook_handle);
 
 /**
- * Registers hooks in a single batch
- * @returns JAPIBatchHookRegisterResult, you have to take ownership of the handles, as they will not be freed.
+ * Registers hooks in a single batch\n
+ * handles[i] match data[i], handle with id == 0 means hook failure.
+ * @returns JAPIBatchRegisterHookResult, you have to take ownership of the handles, as they will not be freed.
  * If you do want to free them, use JAPI_Free
  */
-JEXP JAPIBatchHookRegisterResult JAPI_BatchRegisterHooks(JAPIBatchRegisterHookContainer hooks);
+JEXP JAPIBatchRegisterHookResult JAPI_BatchRegisterHooks(JAPIBatchRegisterHookContainer hooks);
 
 /**
- * Unregisters hooks in a single batch
+ * Unregisters hooks in a single batch\n
+ * handles[i] matches success[i], true == success
  * @returns JAPIBatchHookUnregisterResult, you have to take ownership of success, as they will not be freed.
  * If you do want to free them, use JAPI_Free
  */
@@ -257,6 +259,8 @@ JEXP void JAPI_LogMessage(JAPI_LOG_LEVEL level, const char* message, ...);
 
 /**
  * Returns the JAPI version string
+ * @Warning doing anything besides reading this string (including but not limited to mutating it, or trying to free it)
+ * will result in me being very angry at you
  */
 JEXP const char* JAPI_GetVersion();
 
