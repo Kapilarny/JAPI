@@ -190,3 +190,7 @@ void JAPI_ConfigSetFloat(const char *key, float value) {
 
     meta->mod_config.set(key, value);
 }
+
+const char * JAPI_GetVersion() {
+    return JAPI_VERSION;
+}

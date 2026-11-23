@@ -16,6 +16,8 @@ japi::japi() : japi_cfg(config::load("japi/config/JAPI.cfg")){
     // Initialize logger
     logger::init("JoJoAPI");
 
+    JINFO("Running JAPI %s", JAPI_VERSION);
+
     if (japi_cfg.bind("spawn_console", false)) {
         logger::spawn_console();
     }

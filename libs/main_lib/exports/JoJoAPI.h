@@ -220,6 +220,11 @@ JEXP void JAPI_FreeString(JAPIString* japi_string);
  */
 JEXP void JAPI_LogMessage(JAPI_LOG_LEVEL level, const char* message, ...);
 
+/**
+ * Returns the JAPI version string
+ */
+JEXP const char* JAPI_GetVersion();
+
 #pragma endregion
 
 #endif //JAPI_PRELOAD_JOJOAPI_H

@@ -34,6 +34,11 @@ JAPIHookHandle hook_manager::register_hook(JAPIHookMeta hook) {
         hook.target += (uint64_t)japi::get().get_module_base();
     }
 
+    if (registered_hook_addresses.contains(hook.target)) {
+        JERROR("Trying to hook a function which is already hooked! Rejecting the hook... (Addr: %p)", hook.target);
+        return 0;
+    }
+
     MH_STATUS status = MH_CreateHook((LPVOID)hook.target, hook.detour, (LPVOID*) hook.original);
     if (status != MH_OK) {
         JERROR("Failed to create hook for function: %s", hook.name);
@@ -46,6 +51,8 @@ JAPIHookHandle hook_manager::register_hook(JAPIHookMeta hook) {
         JERROR("Failed to enable hook for function: %s", hook.name);
         return 0;
     }
+
+    registered_hook_addresses.insert(hook.target);
 
     JAPIHookHandle result = 0;
     if (!hook_stack.empty()) {
@@ -81,6 +88,7 @@ bool hook_manager::unregister_hook(JAPIHookHandle hook_handle) {
         return false;
     }
 
+    registered_hook_addresses.erase(hooks[hook_idx].target);
     hooks[hook_idx] = {}; // We consider hooks with a null target empty hooks
     hook_stack.push(hook_idx); // Recycle index
 

@@ -159,6 +159,8 @@ void modloader::load_mod(const char* path, const char* filename) {
     loaded_mods[mod] = meta;
     loaded_mods_by_guid[retr_meta.guid] = mod;
 
+    JTRACE("Initializing mod: %s (version: %s)", meta.guid, meta.version);
+
     // Call the mod init function
     auto mod_init = (void(__stdcall*)())GetProcAddress(mod, "ModInit");
     if (mod_init != nullptr) {

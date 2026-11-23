@@ -8,6 +8,7 @@
 #include <memory>
 #include <stack>
 #include <vector>
+#include <unordered_set>
 
 #include "JoJoAPI.h"
 
@@ -25,6 +26,7 @@ private:
 
     static inline std::unique_ptr<hook_manager> instance = nullptr;
 
+    std::unordered_set<uintptr_t> registered_hook_addresses;
     std::vector<JAPIHookMeta> hooks;
     std::stack<JAPIHookHandle> hook_stack; // Recycles unused indexes
 };
