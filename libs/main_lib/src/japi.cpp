@@ -14,9 +14,19 @@
 #include "subsystems/hook.h"
 
 japi::japi() : japi_cfg(config::load("japi/config/JAPI.cfg")){
-    // Copy the old JoJoAPI.log to JoJoAPI.prev.log
-    if (std::filesystem::exists("JoJoAPI.log")) {
-        std::filesystem::copy_file("JoJoAPI.log", "japi/logs/JoJoAPI.prev.log", std::filesystem::copy_options::overwrite_existing);
+    try {
+        if (std::filesystem::exists("JoJoAPI.log")) {
+            std::filesystem::create_directories("japi/logs");
+
+            std::filesystem::copy_file(
+                "JoJoAPI.log",
+                "japi/logs/JoJoAPI.prev.log",
+                std::filesystem::copy_options::overwrite_existing
+            );
+        }
+    }
+    catch (const std::filesystem::filesystem_error& e) {
+        JERROR("Failed to copy JoJoAPI.log: %s", e.what());
     }
 
     // Initialize logger

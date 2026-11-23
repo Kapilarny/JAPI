@@ -42,6 +42,7 @@ void launcher::run() {
         check_for_updates();
     }
 
+    JINFO("Launching the game...");
     launch_game();
 }
 
