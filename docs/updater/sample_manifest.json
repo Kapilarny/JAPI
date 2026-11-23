@@ -1,0 +1,15 @@
+{
+  "manifest_version": 1,
+  "content": {
+    "version": "4.0.0",
+    "timestamp": 123456789,
+    "files": [
+      {
+        "name": "JAPI.dll"
+      },
+      {
+        "name": "JAPIPreload.dll"
+      }
+    ]
+  }
+}
