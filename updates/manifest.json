@@ -1,13 +1,13 @@
 {
   "version": 1,
   "content": {
-    "latest_version": "4.2.0",
+    "latest_version": "4.1.0",
     "updates": [
       {
-        "version": "4.2.0",
+        "version": "4.1.0",
         "date": "2024-06-01",
         "description": "JAPILauncher!",
-        "package_name": "update420.japi"
+        "package_name": "update410.japi"
       }
     ]
   }
