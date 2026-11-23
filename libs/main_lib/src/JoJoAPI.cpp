@@ -194,3 +194,31 @@ void JAPI_ConfigSetFloat(const char *key, float value) {
 const char * JAPI_GetVersion() {
     return JAPI_VERSION;
 }
+
+JAPIBatchHookRegisterResult JAPI_BatchRegisterHooks(const JAPIBatchRegisterHookContainer hooks) {
+    JAPIBatchHookRegisterResult res{};
+    res.count = hooks.count;
+    res.handles = (JAPIHookHandle*)malloc(sizeof(JAPIHookHandle) * res.count);
+
+    for (int i = 0; i < hooks.count; i++) {
+        res.handles[i] = hook_manager::get().register_hook(hooks.data[i]);
+    }
+
+    return res;
+}
+
+JAPIBatchHookUnregisterResult JAPI_BatchUnregisterHooks(const JAPIBatchUnregisterHookContainer hooks) {
+    JAPIBatchHookUnregisterResult res{};
+    res.count = hooks.count;
+    res.success = (bool*)malloc(sizeof(bool) * res.count);
+
+    for (int i = 0; i < hooks.count; i++) {
+        res.success[i] = hook_manager::get().unregister_hook(hooks.handles[i]);
+    }
+
+    return res;
+}
+
+void JAPI_Free(void *data) {
+    free(data);
+}

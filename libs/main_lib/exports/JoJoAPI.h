@@ -31,6 +31,22 @@ typedef struct JAPIHookMeta {
     bool game_function;
 } JAPIHookMeta;
 
+typedef struct JAPIBatchRegisterHookContainer {
+    JAPIHookMeta* data;
+    uint32_t count;
+} JAPIBatchRegisterHookContainer;
+
+typedef struct JAPIBatchHookRegisterResult {
+    JAPIHookHandle* handles;
+    uint32_t count;
+} JAPIBatchHookReturn;
+typedef JAPIBatchHookReturn JAPIBatchUnregisterHookContainer;
+
+typedef struct JAPIBatchHookUnregisterResult {
+    bool* success;
+    uint32_t count;
+} JAPIBatchHookUnregisterResult;
+
 typedef struct JAPIString {
     const char* data;
     uint32_t length; // does not include the null terminator
@@ -90,6 +106,20 @@ JEXP JAPIHookHandle JAPI_RegisterHook(JAPIHookMeta hook_meta);
  * @return 1 on success, 0 on failure.
  */
 JEXP bool JAPI_UnregisterHook(JAPIHookHandle hook_handle);
+
+/**
+ * Registers hooks in a single batch
+ * @returns JAPIBatchHookRegisterResult, you have to take ownership of the handles, as they will not be freed.
+ * If you do want to free them, use JAPI_Free
+ */
+JEXP JAPIBatchHookRegisterResult JAPI_BatchRegisterHooks(JAPIBatchRegisterHookContainer hooks);
+
+/**
+ * Unregisters hooks in a single batch
+ * @returns JAPIBatchHookUnregisterResult, you have to take ownership of success, as they will not be freed.
+ * If you do want to free them, use JAPI_Free
+ */
+JEXP JAPIBatchHookUnregisterResult JAPI_BatchUnregisterHooks(JAPIBatchUnregisterHookContainer hooks);
 
 #pragma endregion
 
@@ -213,6 +243,11 @@ JEXP void JAPI_RegisterGUITab(const char* title, void (*imgui_draw_callback)());
  * Frees a JAPIString allocated by JoJoAPI.
  */
 JEXP void JAPI_FreeString(JAPIString* japi_string);
+
+/**
+ * Frees JAPI allocated resources. Only use it on resources that directly specify they can be freed by this.
+ */
+JEXP void JAPI_Free(void* data);
 
 /**
  * Logs a message with the given log level.
