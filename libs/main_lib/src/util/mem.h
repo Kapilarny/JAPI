@@ -6,7 +6,7 @@
 #define JAPI_PRELOAD_MEM_H
 
 #include <cstdint>
-#include <Windows.h>
+#include <windows.h>
 #include <stdint.h>
 #include <stdlib.h>
 #include <vector>
