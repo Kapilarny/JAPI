@@ -18,8 +18,10 @@ public:
 
     static hook_manager& get();
 
-    JAPIHookHandle register_hook(JAPIHookMeta hook);
+    JAPIBatchRegisterHookResult batch_register_hooks(JAPIBatchRegisterHookContainer hooks);
+    JAPIBatchHookUnregisterResult batch_unregister_hooks(JAPIBatchUnregisterHookContainer hooks);
 
+    JAPIHookHandle register_hook(JAPIHookMeta hook);
     bool unregister_hook(JAPIHookHandle hook_handle);
 private:
     hook_manager() = default; // TODO: Keep track of hooks and their states

@@ -196,27 +196,11 @@ const char * JAPI_GetVersion() {
 }
 
 JAPIBatchRegisterHookResult JAPI_BatchRegisterHooks(const JAPIBatchRegisterHookContainer hooks) {
-    JAPIBatchRegisterHookResult res{};
-    res.count = hooks.count;
-    res.handles = (JAPIHookHandle*)malloc(sizeof(JAPIHookHandle) * res.count);
-
-    for (int i = 0; i < hooks.count; i++) {
-        res.handles[i] = hook_manager::get().register_hook(hooks.data[i]);
-    }
-
-    return res;
+    return hook_manager::get().batch_register_hooks(hooks);
 }
 
 JAPIBatchHookUnregisterResult JAPI_BatchUnregisterHooks(const JAPIBatchUnregisterHookContainer hooks) {
-    JAPIBatchHookUnregisterResult res{};
-    res.count = hooks.count;
-    res.success = (bool*)malloc(sizeof(bool) * res.count);
-
-    for (int i = 0; i < hooks.count; i++) {
-        res.success[i] = hook_manager::get().unregister_hook(hooks.handles[i]);
-    }
-
-    return res;
+    return hook_manager::get().batch_unregister_hooks(hooks);
 }
 
 void JAPI_Free(void *data) {

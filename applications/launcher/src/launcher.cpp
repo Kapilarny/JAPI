@@ -24,9 +24,19 @@ launcher::launcher() : _cfg(config::load("japi/config/launcher.toml")) {}
 void launcher::run() {
     JINFO("Running launcher version %s", LAUNCHER_VERSION);
 
-    if (_cfg.get<bool>("auto_update", false)) {
-        JINFO("Auto-update is enabled, checking for updates...");
-        check_for_updates();
+    // Check if there's any `.japi` update files in the current directory
+    for (const auto& entry : std::filesystem::directory_iterator(".")) {
+        if (entry.is_regular_file() && entry.path().extension() == ".japi") {
+            JINFO("Found update file: %s", entry.path().filename().string().c_str());
+
+            binary_file f(entry.path().string(), true);
+            downloader d;
+            installer inst(f, d);
+            inst.install();
+
+            // delete the file afterward...
+            std::filesystem::remove(entry.path());
+        }
     }
 
     if (_cfg.get<bool>("first_launch", true)) {
